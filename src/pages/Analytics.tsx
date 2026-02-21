@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useFinance } from '@/contexts/FinanceContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from 'date-fns';
 
@@ -11,6 +12,7 @@ const COLORS = [
 
 export default function Analytics() {
   const { transactions, categories } = useFinance();
+  const { formatCurrency } = useSettings();
   const [months, setMonths] = useState(6);
 
   // Expense by category (current month)
@@ -82,7 +84,7 @@ export default function Analytics() {
                       <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
                       <span className="text-muted-foreground">{d.icon} {d.name}</span>
                     </div>
-                    <span className="font-medium">${d.value.toFixed(0)}</span>
+                    <span className="font-medium">{formatCurrency(d.value)}</span>
                   </div>
                 ))}
               </div>

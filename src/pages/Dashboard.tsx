@@ -1,9 +1,11 @@
 import { useFinance } from '@/contexts/FinanceContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { TransactionList } from '@/components/TransactionList';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 
 export default function Dashboard() {
   const { transactions, getBalance } = useFinance();
+  const { formatCurrency } = useSettings();
   const { income, expense, net } = getBalance();
   const recentTransactions = [...transactions]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -16,7 +18,7 @@ export default function Dashboard() {
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">Total Balance</p>
           <h1 className="text-4xl font-bold tracking-tight">
-            ${net.toFixed(2)}
+            {formatCurrency(net)}
           </h1>
         </div>
 
@@ -27,14 +29,14 @@ export default function Dashboard() {
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Income</span>
             </div>
-            <p className="mt-1 text-xl font-bold text-income">${income.toFixed(2)}</p>
+            <p className="mt-1 text-xl font-bold text-income">{formatCurrency(income)}</p>
           </div>
           <div className="stat-card rounded-2xl bg-expense/10">
             <div className="flex items-center gap-2 text-expense">
               <TrendingDown className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Expenses</span>
             </div>
-            <p className="mt-1 text-xl font-bold text-expense">${expense.toFixed(2)}</p>
+            <p className="mt-1 text-xl font-bold text-expense">{formatCurrency(expense)}</p>
           </div>
         </div>
 
@@ -53,6 +55,7 @@ export default function Dashboard() {
 
 function BudgetSummary() {
   const { budgets, categories } = useFinance();
+  const { formatCurrency } = useSettings();
   if (budgets.length === 0) return null;
 
   return (
@@ -68,7 +71,7 @@ function BudgetSummary() {
             <div key={b.id} className="rounded-xl bg-card p-3">
               <div className="flex justify-between text-sm">
                 <span className="font-medium">{cat?.icon} {cat?.name || b.category}</span>
-                <span className="text-muted-foreground">${b.spent.toFixed(0)} / ${b.amount.toFixed(0)}</span>
+                <span className="text-muted-foreground">{formatCurrency(b.spent)} / {formatCurrency(b.amount)}</span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
                 <div

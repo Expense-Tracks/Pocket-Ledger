@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# Expense Ledger
 
-## Project info
+A modern, intuitive expense tracking application built with React, TypeScript, and Tailwind CSS.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- 💰 **Track Income & Expenses** - Easily record all your financial transactions
+- 📊 **Visual Analytics** - Beautiful charts and graphs to understand your spending
+- 🎯 **Budget Management** - Set and track budgets for different categories
+- 💱 **Multi-Currency Support** - 15+ currencies with automatic formatting
+- 🌓 **Dark Mode** - Light, dark, and system theme options
+- 📱 **Mobile-First Design** - Responsive and works great on all devices
+- 🎨 **Customizable Categories** - Create custom categories with emoji picker
+- 💳 **Payment Methods** - Track different payment methods
+- 💾 **Local Storage** - All data stored securely in your browser
+- ⚙️ **Comprehensive Settings** - Customize currency, theme, categories, and more
 
-There are several ways of editing your application.
+## Getting Started
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+- Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd expense-ledger
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Build for Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+npm run build
+```
 
-**Use GitHub Codespaces**
+### Run Tests
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm test
+```
 
-## What technologies are used for this project?
+## Technologies Used
 
-This project is built with:
+- **Vite** - Fast build tool and dev server
+- **React 18** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Utility-first CSS framework
+- **shadcn/ui** - Beautiful, accessible UI components
+- **Recharts** - Charting library for analytics
+- **emoji-picker-react** - Emoji selection component
+- **date-fns** - Date manipulation
+- **React Router** - Client-side routing
+- **Sonner** - Toast notifications
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Project Structure
 
-## How can I deploy this project?
+```
+expense-ledger/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── contexts/       # React contexts (Finance, Settings)
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utility functions and storage
+│   ├── pages/          # Page components (Dashboard, Transactions, etc.)
+│   ├── types/          # TypeScript type definitions
+│   └── App.tsx         # Main app component
+├── public/             # Static assets
+└── index.html          # HTML entry point
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Features Documentation
 
-## Can I connect a custom domain to my Lovable project?
+- [Settings Feature](./SETTINGS_FEATURE.md) - Comprehensive settings documentation
+- [Emoji Picker Feature](./EMOJI_PICKER_FEATURE.md) - Emoji picker usage guide
 
-Yes, you can!
+## Contributing
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## License
+
+This project is open source and available under the MIT License.

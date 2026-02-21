@@ -1,5 +1,6 @@
 import { Transaction } from '@/types/finance';
 import { useFinance } from '@/contexts/FinanceContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { format } from 'date-fns';
 import { Trash2 } from 'lucide-react';
 
@@ -10,6 +11,7 @@ interface Props {
 
 export function TransactionList({ transactions, showDelete = false }: Props) {
   const { categories, paymentMethods, deleteTransaction } = useFinance();
+  const { formatCurrency } = useSettings();
 
   const getCategoryInfo = (id: string) => categories.find(c => c.id === id);
   const getPaymentInfo = (id: string) => paymentMethods.find(p => p.id === id);
@@ -44,7 +46,7 @@ export function TransactionList({ transactions, showDelete = false }: Props) {
             </div>
             <div className="flex items-center gap-2">
               <span className={`font-semibold text-sm ${t.type === 'income' ? 'text-income' : 'text-expense'}`}>
-                {t.type === 'income' ? '+' : '-'}${t.amount.toFixed(2)}
+                {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
               </span>
               {showDelete && (
                 <button

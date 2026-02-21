@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useFinance } from '@/contexts/FinanceContext';
+import { useSettings } from '@/contexts/SettingsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Plus, Trash2 } from 'lucide-react';
 
 export default function Budgets() {
   const { budgets, categories, addBudget, deleteBudget } = useFinance();
+  const { formatCurrency } = useSettings();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState('');
@@ -98,8 +100,8 @@ export default function Budgets() {
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="text-right">
-                        <p className="text-sm font-bold">${b.spent.toFixed(2)}</p>
-                        <p className="text-xs text-muted-foreground">of ${b.amount.toFixed(2)}</p>
+                        <p className="text-sm font-bold">{formatCurrency(b.spent)}</p>
+                        <p className="text-xs text-muted-foreground">of {formatCurrency(b.amount)}</p>
                       </div>
                       <button onClick={() => deleteBudget(b.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
                         <Trash2 className="h-4 w-4" />
@@ -118,7 +120,7 @@ export default function Budgets() {
                     <span>{pct.toFixed(0)}% used</span>
                     {isOver && <span className="font-semibold text-expense">Over budget!</span>}
                     {isWarning && !isOver && <span className="font-semibold text-warning">Almost there</span>}
-                    {!isWarning && <span>${(b.amount - b.spent).toFixed(2)} remaining</span>}
+                    {!isWarning && <span>{formatCurrency(b.amount - b.spent)} remaining</span>}
                   </div>
                 </div>
               );
