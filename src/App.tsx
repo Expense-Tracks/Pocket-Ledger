@@ -23,7 +23,7 @@ const App = () => (
       <Sonner />
       <SettingsProvider>
         <FinanceProvider>
-          <BrowserRouter>
+          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/transactions" element={<Transactions />} />

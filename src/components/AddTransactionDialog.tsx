@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DatePicker } from '@/components/DatePicker';
 import { Plus } from 'lucide-react';
 
 export function AddTransactionDialog() {
@@ -16,7 +17,7 @@ export function AddTransactionDialog() {
   const [category, setCategory] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [description, setDescription] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState<Date>(new Date());
 
   const filteredCategories = categories.filter(c => c.type === type);
 
@@ -30,7 +31,7 @@ export function AddTransactionDialog() {
       category: category || filteredCategories[0]?.id || 'uncategorized',
       paymentMethod,
       description,
-      date: new Date(date).toISOString(),
+      date: date.toISOString(),
     });
     setOpen(false);
     resetForm();
@@ -40,7 +41,7 @@ export function AddTransactionDialog() {
     setAmount('');
     setCategory('');
     setDescription('');
-    setDate(new Date().toISOString().split('T')[0]);
+    setDate(new Date());
   };
 
   return (
@@ -138,17 +139,12 @@ export function AddTransactionDialog() {
             />
           </div>
 
-          <div>
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-              className="mt-1"
-              required
-            />
-          </div>
+          <DatePicker
+            date={date}
+            onDateChange={setDate}
+            label="Date"
+            placeholder="Select transaction date"
+          />
 
           <Button type="submit" className="w-full" size="lg">
             Add {type === 'expense' ? 'Expense' : 'Income'}

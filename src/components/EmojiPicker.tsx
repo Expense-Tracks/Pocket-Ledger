@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import EmojiPickerReact, { EmojiClickData, Theme } from 'emoji-picker-react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { Smile } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface EmojiPickerProps {
   value: string;
@@ -12,6 +13,7 @@ interface EmojiPickerProps {
 
 export function EmojiPicker({ value, onChange, label = 'Icon' }: EmojiPickerProps) {
   const [open, setOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [theme, setTheme] = useState<Theme>(
     document.documentElement.classList.contains('dark') ? Theme.DARK : Theme.LIGHT
   );
@@ -36,34 +38,45 @@ export function EmojiPicker({ value, onChange, label = 'Icon' }: EmojiPickerProp
     setOpen(false);
   };
 
+  // Get responsive dimensions
+  const pickerWidth = isMobile ? Math.min(window.innerWidth - 32, 350) : 350;
+  const pickerHeight = isMobile ? 400 : 450;
+
+  const triggerButton = (
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full justify-start text-left font-normal"
+    >
+      <span className="text-2xl mr-2 flex-shrink-0">{value || '😀'}</span>
+      <span className="text-muted-foreground truncate">Click to change icon</span>
+      <Smile className="ml-auto h-4 w-4 opacity-50 flex-shrink-0" />
+    </Button>
+  );
+
   return (
     <div className="space-y-2">
       {label && <label className="text-sm font-medium">{label}</label>}
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full justify-start text-left font-normal"
-          >
-            <span className="text-2xl mr-2">{value || '😀'}</span>
-            <span className="text-muted-foreground">Click to change icon</span>
-            <Smile className="ml-auto h-4 w-4 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0 border-0" align="start">
-          <EmojiPickerReact
-            onEmojiClick={handleEmojiClick}
-            theme={theme}
-            width="100%"
-            height={400}
-            searchPlaceHolder="Search emoji..."
-            previewConfig={{
-              showPreview: false,
-            }}
-          />
-        </PopoverContent>
-      </Popover>
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>
+          {triggerButton}
+        </DrawerTrigger>
+        <DrawerContent className="max-h-[85vh]">
+          <div className="flex justify-center py-4 overflow-hidden">
+            <EmojiPickerReact
+              onEmojiClick={handleEmojiClick}
+              theme={theme}
+              width={pickerWidth}
+              height={pickerHeight}
+              searchPlaceHolder="Search emoji..."
+              previewConfig={{
+                showPreview: false,
+              }}
+              skinTonesDisabled
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
