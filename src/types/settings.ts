@@ -2,7 +2,7 @@ export interface AppSettings {
   currency: CurrencyOption;
   theme: 'light' | 'dark' | 'system';
   language: string;
-  dateFormat: 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD';
+  dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'yyyy-MM-dd';
   defaultTransactionType: 'income' | 'expense';
   notifications: boolean;
 }
@@ -36,7 +36,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   currency: CURRENCIES[0], // USD
   theme: 'system',
   language: 'en',
-  dateFormat: 'MM/DD/YYYY',
+  dateFormat: 'MM/dd/yyyy',
   defaultTransactionType: 'expense',
   notifications: true,
 };

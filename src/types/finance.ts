@@ -58,6 +58,21 @@ export interface SavingsGoal {
   createdAt: string;
 }
 
+export type DebtType = 'owed-to-me' | 'i-owe';
+export type DebtStatus = 'pending' | 'paid';
+
+export interface Debt {
+  id: string;
+  person: string;
+  amount: number;
+  type: DebtType;
+  status: DebtStatus;
+  dueDate?: string; // ISO string
+  description: string;
+  createdAt: string;
+  linkedTransactionId?: string; // Track the transaction created when marked as paid
+}
+
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'groceries', name: 'Groceries', type: 'expense', icon: '🛒', isDefault: true },
   { id: 'transport', name: 'Transportation', type: 'expense', icon: '🚗', isDefault: true },
@@ -66,10 +81,12 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'healthcare', name: 'Healthcare', type: 'expense', icon: '🏥', isDefault: true },
   { id: 'dining', name: 'Dining', type: 'expense', icon: '🍽️', isDefault: true },
   { id: 'shopping', name: 'Shopping', type: 'expense', icon: '🛍️', isDefault: true },
+  { id: 'debt-payment', name: 'Debt Payment', type: 'expense', icon: '💸', isDefault: true },
   { id: 'salary', name: 'Salary', type: 'income', icon: '💰', isDefault: true },
   { id: 'freelance', name: 'Freelance', type: 'income', icon: '💻', isDefault: true },
   { id: 'investment', name: 'Investment', type: 'income', icon: '📈', isDefault: true },
   { id: 'gift', name: 'Gift', type: 'income', icon: '🎁', isDefault: true },
+  { id: 'debt-collection', name: 'Debt Collection', type: 'income', icon: '💵', isDefault: true },
   { id: 'uncategorized', name: 'Uncategorized', type: 'expense', icon: '📋', isDefault: true },
 ];
 

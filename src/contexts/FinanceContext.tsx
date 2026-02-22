@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { startOfWeek, startOfMonth, startOfYear, endOfWeek, endOfMonth, endOfYear } from 'date-fns';
-import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal } from '@/types/finance';
+import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal, Debt } from '@/types/finance';
 import {
   loadTransactions, saveTransactions,
   loadCategories, saveCategories,
@@ -9,6 +9,7 @@ import {
   loadBudgets, saveBudgets,
   loadRecurring, saveRecurring,
   loadSavingsGoals, saveSavingsGoals,
+  loadDebts, saveDebts,
 } from '@/lib/storage';
 
 interface FinanceContextType {
@@ -18,7 +19,8 @@ interface FinanceContextType {
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   savingsGoals: SavingsGoal[];
-  addTransaction: (t: Omit<Transaction, 'id' | 'createdAt'>) => void;
+  debts: Debt[];
+  addTransaction: (t: Omit<Transaction, 'id' | 'createdAt'>) => string;
   updateTransaction: (id: string, t: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
   addCategory: (c: Omit<Category, 'id' | 'isDefault'>) => void;
@@ -35,6 +37,9 @@ interface FinanceContextType {
   updateSavingsGoal: (id: string, g: Partial<SavingsGoal>) => void;
   deleteSavingsGoal: (id: string) => void;
   contributeSavingsGoal: (id: string, amount: number) => void;
+  addDebt: (d: Omit<Debt, 'id' | 'createdAt'>) => string;
+  updateDebt: (id: string, d: Partial<Debt>) => void;
+  deleteDebt: (id: string) => void;
   importData: (data: ExportData, mode: 'replace' | 'merge') => void;
   getBalance: () => { income: number; expense: number; net: number };
   budgetsWithSpent: Budget[];
@@ -61,6 +66,7 @@ export interface ExportData {
   budgets: Budget[];
   recurringTransactions: RecurringTransaction[];
   savingsGoals: SavingsGoal[];
+  debts: Debt[];
 }
 
 const FinanceContext = createContext<FinanceContextType | null>(null);
@@ -83,6 +89,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   // Defer localStorage reads so they don't block first paint
@@ -93,6 +100,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     setBudgets(loadBudgets());
     setRecurringTransactions(loadRecurring());
     setSavingsGoals(loadSavingsGoals());
+    setDebts(loadDebts());
     setHydrated(true);
   }, []);
 
@@ -103,6 +111,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => { if (hydrated) saveBudgets(budgets); }, [budgets, hydrated]);
   useEffect(() => { if (hydrated) saveRecurring(recurringTransactions); }, [recurringTransactions, hydrated]);
   useEffect(() => { if (hydrated) saveSavingsGoals(savingsGoals); }, [savingsGoals, hydrated]);
+  useEffect(() => { if (hydrated) saveDebts(debts); }, [debts, hydrated]);
 
   // Auto-generate transactions from active recurring rules
   useEffect(() => {
@@ -156,6 +165,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   const addTransaction = useCallback((t: Omit<Transaction, 'id' | 'createdAt'>) => {
     const newT: Transaction = { ...t, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
     setTransactions(prev => [newT, ...prev]);
+    return newT.id;
   }, []);
 
   const updateTransaction = useCallback((id: string, updates: Partial<Transaction>) => {
@@ -262,6 +272,26 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     setSavingsGoals(prev => prev.map(g => g.id === id ? { ...g, savedAmount: g.savedAmount + amount } : g));
   }, []);
 
+  const addDebt = useCallback((d: Omit<Debt, 'id' | 'createdAt'>) => {
+    const newDebt: Debt = { ...d, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
+    setDebts(prev => [newDebt, ...prev]);
+    return newDebt.id;
+  }, []);
+
+  const updateDebt = useCallback((id: string, updates: Partial<Debt>) => {
+    setDebts(prev => prev.map(d => d.id === id ? { ...d, ...updates } : d));
+  }, []);
+
+  const deleteDebt = useCallback((id: string) => {
+    const removed = debts.find(d => d.id === id);
+    setDebts(prev => prev.filter(d => d.id !== id));
+    if (removed) {
+      toast('Debt deleted', {
+        action: { label: 'Undo', onClick: () => setDebts(p => [removed, ...p]) },
+      });
+    }
+  }, [debts]);
+
   const importData = useCallback((data: ExportData, mode: 'replace' | 'merge') => {
     if (mode === 'replace') {
       setTransactions(data.transactions);
@@ -270,6 +300,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setBudgets(data.budgets);
       setRecurringTransactions(data.recurringTransactions);
       setSavingsGoals(data.savingsGoals || []);
+      setDebts(data.debts || []);
     } else {
       const mergeById = <T extends { id: string }>(existing: T[], incoming: T[]): T[] => {
         const ids = new Set(existing.map(i => i.id));
@@ -281,6 +312,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setBudgets(prev => mergeById(prev, data.budgets));
       setRecurringTransactions(prev => mergeById(prev, data.recurringTransactions));
       setSavingsGoals(prev => mergeById(prev, data.savingsGoals || []));
+      setDebts(prev => mergeById(prev, data.debts || []));
     }
   }, []);
 
@@ -292,7 +324,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <FinanceContext.Provider value={{
-      transactions, categories, paymentMethods, budgets, recurringTransactions, savingsGoals,
+      transactions, categories, paymentMethods, budgets, recurringTransactions, savingsGoals, debts,
       budgetsWithSpent,
       addTransaction, updateTransaction, deleteTransaction,
       addCategory, deleteCategory,
@@ -300,6 +332,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addBudget, updateBudget, deleteBudget,
       addRecurring, updateRecurring, deleteRecurring,
       addSavingsGoal, updateSavingsGoal, deleteSavingsGoal, contributeSavingsGoal,
+      addDebt, updateDebt, deleteDebt,
       importData,
       getBalance,
     }}>

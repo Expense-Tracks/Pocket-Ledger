@@ -57,7 +57,7 @@ export function EditTransactionDialog({ transaction, open, onOpenChange }: Props
       description,
       date: date.toISOString(),
     });
-    toast.success('Transaction updated');
+    toast.success('Transaction updated', { duration: 1000 });
     onOpenChange(false);
   };
 

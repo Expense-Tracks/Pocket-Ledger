@@ -41,7 +41,7 @@ export default function SavingsGoals() {
     addSavingsGoal({ name: name.trim(), icon, targetAmount: parsed, targetDate: targetDate.toISOString() });
     resetCreateForm();
     setCreateOpen(false);
-    toast.success('Savings goal created');
+    toast.success('Savings goal created', { duration: 1000 });
   };
 
   const handleContribute = (goalId: string) => {
@@ -50,7 +50,7 @@ export default function SavingsGoals() {
     contributeSavingsGoal(goalId, parsed);
     setContributeAmount('');
     setContributeOpen(null);
-    toast.success('Contribution added');
+    toast.success('Contribution added', { duration: 1000 });
   };
 
   return (
