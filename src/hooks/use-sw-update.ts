@@ -26,9 +26,9 @@ export function useSwUpdate() {
   needRefreshRef.current = needRefresh;
 
   const showUpdateToast = useCallback(() => {
-    toast('Versi baru tersedia', {
+    toast('New version available', {
       id: TOAST_ID,
-      description: 'Refresh untuk mendapatkan pembaruan terbaru.',
+      description: 'Refresh to get the latest update.',
       duration: Infinity,
       dismissible: false,
       action: {
