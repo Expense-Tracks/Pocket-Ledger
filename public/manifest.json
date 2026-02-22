@@ -7,6 +7,9 @@
   "background_color": "#ffffff",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
+  "lang": "en-US",
+  "dir": "ltr",
+  "iarc_rating_id": "e72828b8-4d5c-4422-94b2-07613589c372",
   "icons": [
     {
       "src": "/favicon.svg",
@@ -25,6 +28,20 @@
       "type": "image/png"
     }
   ],
-  "categories": ["finance", "productivity", "utilities"],
+  "categories": ["finance", "productivity", "utilities", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Add Transaction",
+      "short_name": "Add",
+      "url": "/transactions",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Analytics",
+      "short_name": "Analytics",
+      "url": "/analytics",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
   "screenshots": []
 }

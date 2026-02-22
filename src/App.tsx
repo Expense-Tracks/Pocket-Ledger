@@ -4,6 +4,7 @@ import { FinanceProvider } from "@/contexts/FinanceContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { BottomNav } from "@/components/BottomNav";
 import { useSwUpdate } from "@/hooks/use-sw-update";
+import { useTitle } from "@/hooks/use-title";
 
 import Dashboard from "./pages/Dashboard";
 
@@ -24,6 +25,33 @@ const ToastProviders = lazy(() =>
   import("./components/ToastProviders").then(m => ({ default: m.ToastProviders }))
 );
 
+const AppRoutes = () => {
+  useTitle();
+  return (
+    <>
+      <main>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground">Loading…</div>}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/recurring" element={<Recurring />} />
+            <Route path="/savings" element={<SavingsGoals />} />
+            <Route path="/debts" element={<Debts />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </main>
+      <Suspense fallback={null}>
+        <AddTransactionDialog />
+      </Suspense>
+      <BottomNav />
+    </>
+  );
+};
+
 const App = () => {
   useSwUpdate();
 
@@ -31,25 +59,7 @@ const App = () => {
     <SettingsProvider>
       <FinanceProvider>
         <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-          <main>
-            <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground">Loading…</div>}>
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/transactions" element={<Transactions />} />
-                <Route path="/analytics" element={<Analytics />} />
-                <Route path="/budgets" element={<Budgets />} />
-                <Route path="/recurring" element={<Recurring />} />
-                <Route path="/savings" element={<SavingsGoals />} />
-                <Route path="/debts" element={<Debts />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </main>
-          <Suspense fallback={null}>
-            <AddTransactionDialog />
-          </Suspense>
-          <BottomNav />
+          <AppRoutes />
         </BrowserRouter>
       </FinanceProvider>
     </SettingsProvider>
