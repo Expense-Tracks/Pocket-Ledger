@@ -5,7 +5,8 @@ import { SettingsProvider } from "@/contexts/SettingsContext";
 import { BottomNav } from "@/components/BottomNav";
 import { useSwUpdate } from "@/hooks/use-sw-update";
 
-const Dashboard = lazy(() => import("./pages/Dashboard"));
+import Dashboard from "./pages/Dashboard";
+
 const Transactions = lazy(() => import("./pages/Transactions"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Budgets = lazy(() => import("./pages/Budgets"));

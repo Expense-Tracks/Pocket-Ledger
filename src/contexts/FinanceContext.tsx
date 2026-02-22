@@ -83,35 +83,23 @@ function getNextDate(from: string, frequency: RecurringTransaction['frequency'])
 }
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
-  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
-  const [debts, setDebts] = useState<Debt[]>([]);
-  const [hydrated, setHydrated] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
+  const [categories, setCategories] = useState<Category[]>(() => loadCategories());
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => loadPaymentMethods());
+  const [budgets, setBudgets] = useState<Budget[]>(() => loadBudgets());
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>(() => loadRecurring());
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>(() => loadSavingsGoals());
+  const [debts, setDebts] = useState<Debt[]>(() => loadDebts());
+  const [hydrated] = useState(true);
 
-  // Defer localStorage reads so they don't block first paint
-  useEffect(() => {
-    setTransactions(loadTransactions());
-    setCategories(loadCategories());
-    setPaymentMethods(loadPaymentMethods());
-    setBudgets(loadBudgets());
-    setRecurringTransactions(loadRecurring());
-    setSavingsGoals(loadSavingsGoals());
-    setDebts(loadDebts());
-    setHydrated(true);
-  }, []);
-
-  // Only persist after initial hydration to avoid overwriting with empty arrays
-  useEffect(() => { if (hydrated) saveTransactions(transactions); }, [transactions, hydrated]);
-  useEffect(() => { if (hydrated) saveCategories(categories); }, [categories, hydrated]);
-  useEffect(() => { if (hydrated) savePaymentMethods(paymentMethods); }, [paymentMethods, hydrated]);
-  useEffect(() => { if (hydrated) saveBudgets(budgets); }, [budgets, hydrated]);
-  useEffect(() => { if (hydrated) saveRecurring(recurringTransactions); }, [recurringTransactions, hydrated]);
-  useEffect(() => { if (hydrated) saveSavingsGoals(savingsGoals); }, [savingsGoals, hydrated]);
-  useEffect(() => { if (hydrated) saveDebts(debts); }, [debts, hydrated]);
+  // Persist state changes to localStorage
+  useEffect(() => { saveTransactions(transactions); }, [transactions]);
+  useEffect(() => { saveCategories(categories); }, [categories]);
+  useEffect(() => { savePaymentMethods(paymentMethods); }, [paymentMethods]);
+  useEffect(() => { saveBudgets(budgets); }, [budgets]);
+  useEffect(() => { saveRecurring(recurringTransactions); }, [recurringTransactions]);
+  useEffect(() => { saveSavingsGoals(savingsGoals); }, [savingsGoals]);
+  useEffect(() => { saveDebts(debts); }, [debts]);
 
   // Auto-generate transactions from active recurring rules
   useEffect(() => {

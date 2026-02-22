@@ -33,14 +33,8 @@ function saveSettings(settings: AppSettings): void {
 }
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [hydrated, setHydrated] = useState(false);
-
-  // Defer localStorage read so it doesn't block first paint
-  useEffect(() => {
-    setSettings(loadSettings());
-    setHydrated(true);
-  }, []);
+  const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
+  const [hydrated] = useState(true);
 
   // Apply theme on mount and when it changes
   useEffect(() => {
