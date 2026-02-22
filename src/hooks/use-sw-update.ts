@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { toast } from 'sonner';
 
 const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000; // Check every hour
+const TOAST_ID = 'sw-update-toast';
 
 export function useSwUpdate() {
   const {
@@ -21,16 +22,37 @@ export function useSwUpdate() {
     },
   });
 
+  const needRefreshRef = useRef(needRefresh);
+  needRefreshRef.current = needRefresh;
+
+  const showUpdateToast = useCallback(() => {
+    toast('Versi baru tersedia', {
+      id: TOAST_ID,
+      description: 'Refresh untuk mendapatkan pembaruan terbaru.',
+      duration: Infinity,
+      dismissible: false,
+      action: {
+        label: 'Refresh',
+        onClick: () => updateServiceWorker(true),
+      },
+    });
+  }, [updateServiceWorker]);
+
+  // Show toast when needRefresh becomes true
   useEffect(() => {
     if (needRefresh) {
-      toast('Versi baru tersedia', {
-        description: 'Refresh untuk mendapatkan pembaruan terbaru.',
-        duration: Infinity,
-        action: {
-          label: 'Refresh',
-          onClick: () => updateServiceWorker(true),
-        },
-      });
+      showUpdateToast();
     }
-  }, [needRefresh, updateServiceWorker]);
+  }, [needRefresh, showUpdateToast]);
+
+  // Re-show toast when app comes back to foreground (e.g. user reopens PWA)
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && needRefreshRef.current) {
+        showUpdateToast();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [showUpdateToast]);
 }
