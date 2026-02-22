@@ -42,12 +42,16 @@ import {
   Trash2,
   Plus,
   RotateCcw,
+  Download,
+  Upload,
+  Database,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ExportData } from '@/contexts/FinanceContext';
 
 export default function Settings() {
   const { settings, updateSettings, formatCurrency, resetSettings } = useSettings();
-  const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod } = useFinance();
+  const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, importData } = useFinance();
 
   const [newCategory, setNewCategory] = useState<{ name: string; icon: string; type: 'income' | 'expense' }>({ name: '', icon: '📁', type: 'expense' });
   const [newPayment, setNewPayment] = useState({ name: '', icon: '💳' });
@@ -62,18 +66,18 @@ export default function Settings() {
     addCategory(newCategory);
     setNewCategory({ name: '', icon: '📁', type: 'expense' });
     setCategoryDialogOpen(false);
-    toast.success('Category added successfully');
+    toast.success('Category added successfully', { duration: 1000 });
   };
 
   const handleAddPayment = () => {
     if (!newPayment.name.trim()) {
-      toast.error('Please enter a payment method name');
+      toast.error('Please enter a payment method name', { duration: 1000 });
       return;
     }
     addPaymentMethod(newPayment);
     setNewPayment({ name: '', icon: '💳' });
     setPaymentDialogOpen(false);
-    toast.success('Payment method added successfully');
+    toast.success('Payment method added successfully', { duration: 1000 });
   };
 
   const handleDeleteCategory = (id: string, name: string) => {
@@ -88,7 +92,89 @@ export default function Settings() {
 
   const handleResetSettings = () => {
     resetSettings();
-    toast.success('Settings reset to defaults');
+    toast.success('Settings reset to defaults', { duration: 1000 });
+  };
+
+  const buildExportData = (): ExportData => ({
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    transactions,
+    categories,
+    paymentMethods,
+    budgets,
+    recurringTransactions,
+  });
+
+  const downloadFile = (content: string, filename: string, type: string) => {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportJSON = () => {
+    const data = buildExportData();
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadFile(JSON.stringify(data, null, 2), `expense-ledger-${dateStr}.json`, 'application/json');
+    toast.success('Data exported as JSON', { duration: 1000 });
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['Date', 'Type', 'Amount', 'Category', 'Payment Method', 'Description'];
+    const rows = transactions.map(t => {
+      const cat = categories.find(c => c.id === t.category);
+      const pm = paymentMethods.find(p => p.id === t.paymentMethod);
+      return [
+        t.date.slice(0, 10),
+        t.type,
+        formatCurrency(t.amount),
+        cat?.name || t.category,
+        pm?.name || t.paymentMethod,
+        `"${(t.description || '').replace(/"/g, '""')}"`,
+      ].join(',');
+    });
+    const csv = [headers.join(','), ...rows].join('\n');
+    const dateStr = new Date().toISOString().slice(0, 10);
+    downloadFile(csv, `expense-ledger-${dateStr}.csv`, 'text/csv');
+    toast.success('Transactions exported as CSV', { duration: 1000 });
+  };
+
+  const [pendingImport, setPendingImport] = useState<ExportData | null>(null);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+
+  const handlePickImportFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text) as ExportData;
+        if (!data.version || !Array.isArray(data.transactions)) {
+          toast.error('Invalid backup file format');
+          return;
+        }
+        setPendingImport(data);
+        setImportDialogOpen(true);
+      } catch {
+        toast.error('Failed to read backup file');
+      }
+    };
+    input.click();
+  };
+
+  const handleImport = (mode: 'replace' | 'merge') => {
+    if (!pendingImport) return;
+    importData(pendingImport, mode);
+    const count = pendingImport.transactions.length;
+    toast.success(mode === 'replace' ? `Replaced with ${count} transactions` : `Merged ${count} transactions`, { duration: 1000 });
+    setPendingImport(null);
+    setImportDialogOpen(false);
   };
 
   return (
@@ -323,6 +409,66 @@ export default function Settings() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+
+        <Separator className="my-6" />
+
+        {/* Data Export/Import */}
+        <section className="mb-6">
+          <div className="mb-3 flex items-center gap-2">
+            <Database className="h-5 w-5 text-primary" />
+            <h2 className="text-lg font-semibold">Data</h2>
+          </div>
+          <div className="space-y-3">
+            <div className="rounded-xl bg-card p-4">
+              <p className="text-sm font-medium mb-1">Export</p>
+              <p className="text-xs text-muted-foreground mb-3">Download a backup of all your data</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" className="flex-1" onClick={handleExportJSON}>
+                  <Download className="h-4 w-4 mr-1" /> JSON
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1" onClick={handleExportCSV}>
+                  <Download className="h-4 w-4 mr-1" /> CSV
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-xl bg-card p-4">
+              <p className="text-sm font-medium mb-1">Import</p>
+              <p className="text-xs text-muted-foreground mb-3">Restore from a JSON backup file</p>
+              <Button variant="outline" size="sm" className="w-full" onClick={handlePickImportFile}>
+                <Upload className="h-4 w-4 mr-1" /> Import JSON Backup
+              </Button>
+              <Dialog open={importDialogOpen} onOpenChange={(v) => { setImportDialogOpen(v); if (!v) setPendingImport(null); }}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Import Data</DialogTitle>
+                    <DialogDescription>
+                      {pendingImport && `Found ${pendingImport.transactions.length} transactions, ${pendingImport.categories.length} categories, ${pendingImport.budgets.length} budgets, and ${pendingImport.recurringTransactions.length} recurring rules.`}
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-3 py-2">
+                    <button
+                      onClick={() => handleImport('merge')}
+                      className="w-full rounded-xl bg-secondary p-4 text-left transition-colors hover:bg-accent"
+                    >
+                      <p className="text-sm font-semibold">Merge</p>
+                      <p className="text-xs text-muted-foreground">Add new items, keep existing data intact</p>
+                    </button>
+                    <button
+                      onClick={() => handleImport('replace')}
+                      className="w-full rounded-xl bg-secondary p-4 text-left transition-colors hover:bg-destructive/10"
+                    >
+                      <p className="text-sm font-semibold text-destructive">Replace</p>
+                      <p className="text-xs text-muted-foreground">Overwrite all current data with the backup</p>
+                    </button>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="ghost" onClick={() => { setImportDialogOpen(false); setPendingImport(null); }}>Cancel</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </section>
 

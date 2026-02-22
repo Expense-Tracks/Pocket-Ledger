@@ -1,44 +1,57 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FinanceProvider } from "@/contexts/FinanceContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { BottomNav } from "@/components/BottomNav";
-import { AddTransactionDialog } from "@/components/AddTransactionDialog";
-import Dashboard from "./pages/Dashboard";
-import Transactions from "./pages/Transactions";
-import Analytics from "./pages/Analytics";
-import Budgets from "./pages/Budgets";
-import Settings from "./pages/Settings";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <SettingsProvider>
-        <FinanceProvider>
-          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/transactions" element={<Transactions />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/budgets" element={<Budgets />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <AddTransactionDialog />
-            <BottomNav />
-          </BrowserRouter>
-        </FinanceProvider>
-      </SettingsProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Transactions = lazy(() => import("./pages/Transactions"));
+const Analytics = lazy(() => import("./pages/Analytics"));
+const Budgets = lazy(() => import("./pages/Budgets"));
+const Recurring = lazy(() => import("./pages/Recurring"));
+const Settings = lazy(() => import("./pages/Settings"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const AddTransactionDialog = lazy(() =>
+  import("./components/AddTransactionDialog").then(m => ({ default: m.AddTransactionDialog }))
 );
 
-export default App;
+// Defer toast systems — they're not needed at first paint
+const ToastProviders = lazy(() =>
+  import("./components/ToastProviders").then(m => ({ default: m.ToastProviders }))
+);
+
+const App = () => (
+  <SettingsProvider>
+    <FinanceProvider>
+      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+        <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground">Loading…</div>}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/transactions" element={<Transactions />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/budgets" element={<Budgets />} />
+            <Route path="/recurring" element={<Recurring />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+        <Suspense fallback={null}>
+          <AddTransactionDialog />
+        </Suspense>
+        <BottomNav />
+      </BrowserRouter>
+    </FinanceProvider>
+  </SettingsProvider>
+);
+
+// Lazy-mount toast systems after initial render
+const AppWithToasts = () => (
+  <>
+    <App />
+    <Suspense fallback={null}>
+      <ToastProviders />
+    </Suspense>
+  </>
+);
+
+export default AppWithToasts;

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { useFinance } from '@/contexts/FinanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -21,7 +22,14 @@ export default function Budgets() {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0 || !category) return;
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    if (!category) {
+      toast.error('Please select a category');
+      return;
+    }
     addBudget({ category, amount: parsedAmount, period });
     setOpen(false);
     setAmount('');
@@ -57,7 +65,7 @@ export default function Budgets() {
                 </div>
                 <div>
                   <Label>Budget Amount</Label>
-                  <Input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1" inputMode="decimal" required />
+                  <Input type="text" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1" inputMode="decimal" placeholder="0.00" />
                 </div>
                 <div>
                   <Label>Period</Label>

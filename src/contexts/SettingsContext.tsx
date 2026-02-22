@@ -33,13 +33,20 @@ function saveSettings(settings: AppSettings): void {
 }
 
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
-  const [settings, setSettings] = useState<AppSettings>(loadSettings);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Defer localStorage read so it doesn't block first paint
+  useEffect(() => {
+    setSettings(loadSettings());
+    setHydrated(true);
+  }, []);
 
   // Apply theme on mount and when it changes
   useEffect(() => {
     const applyTheme = () => {
       const root = document.documentElement;
-      
+
       if (settings.theme === 'system') {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         root.classList.toggle('dark', prefersDark);
@@ -50,7 +57,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
     applyTheme();
 
-    // Listen for system theme changes
     if (settings.theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handler = () => applyTheme();
@@ -59,10 +65,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings.theme]);
 
-  // Save settings whenever they change
+  // Only persist after initial hydration
   useEffect(() => {
-    saveSettings(settings);
-  }, [settings]);
+    if (hydrated) saveSettings(settings);
+  }, [settings, hydrated]);
 
   const updateSettings = (updates: Partial<AppSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }));

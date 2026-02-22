@@ -40,7 +40,7 @@ export default function Transactions() {
 
         {/* Filters */}
         <div className="mb-4 flex gap-2">
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setCategoryFilter('all'); }}>
             <SelectTrigger className="flex-1">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
@@ -50,15 +50,23 @@ export default function Transactions() {
               <SelectItem value="income">Income</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <Select value={categoryFilter} onValueChange={(v) => {
+            setCategoryFilter(v);
+            if (v !== 'all') {
+              const cat = categories.find(c => c.id === v);
+              if (cat) setTypeFilter(cat.type);
+            }
+          }}>
             <SelectTrigger className="flex-1">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(c => (
-                <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>
-              ))}
+              {categories
+                .filter(c => typeFilter === 'all' || c.type === typeFilter)
+                .map(c => (
+                  <SelectItem key={c.id} value={c.id}>{c.icon} {c.name}</SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>

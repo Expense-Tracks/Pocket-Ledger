@@ -1,18 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useFinance } from '@/contexts/FinanceContext';
-import { TransactionType } from '@/types/finance';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Transaction, TransactionType } from '@/types/finance';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/DatePicker';
-import { Plus } from 'lucide-react';
 
-export function AddTransactionDialog() {
-  const { addTransaction, categories, paymentMethods } = useFinance();
-  const [open, setOpen] = useState(false);
+interface Props {
+  transaction: Transaction | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function EditTransactionDialog({ transaction, open, onOpenChange }: Props) {
+  const { updateTransaction, categories, paymentMethods } = useFinance();
   const [type, setType] = useState<TransactionType>('expense');
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -20,10 +24,22 @@ export function AddTransactionDialog() {
   const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date>(new Date());
 
+  useEffect(() => {
+    if (transaction) {
+      setType(transaction.type);
+      setAmount(String(transaction.amount));
+      setCategory(transaction.category);
+      setPaymentMethod(transaction.paymentMethod);
+      setDescription(transaction.description);
+      setDate(new Date(transaction.date));
+    }
+  }, [transaction]);
+
   const filteredCategories = categories.filter(c => c.type === type);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!transaction) return;
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       toast.error('Please enter a valid amount');
@@ -33,7 +49,7 @@ export function AddTransactionDialog() {
       toast.error('Please select a category');
       return;
     }
-    addTransaction({
+    updateTransaction(transaction.id, {
       amount: parsedAmount,
       type,
       category: category || filteredCategories[0]?.id || 'uncategorized',
@@ -41,30 +57,17 @@ export function AddTransactionDialog() {
       description,
       date: date.toISOString(),
     });
-    setOpen(false);
-    resetForm();
-  };
-
-  const resetForm = () => {
-    setAmount('');
-    setCategory('');
-    setDescription('');
-    setDate(new Date());
+    toast.success('Transaction updated');
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon" className="fixed bottom-20 right-4 z-50 h-14 w-14 rounded-full shadow-lg">
-          <Plus className="h-6 w-6" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[calc(100vw-2rem)] rounded-2xl sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add Transaction</DialogTitle>
+          <DialogTitle>Edit Transaction</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Type toggle */}
           <div className="flex gap-2 rounded-xl bg-secondary p-1">
             <button
               type="button"
@@ -87,9 +90,9 @@ export function AddTransactionDialog() {
           </div>
 
           <div>
-            <Label htmlFor="amount">Amount</Label>
+            <Label htmlFor="edit-amount">Amount</Label>
             <Input
-              id="amount"
+              id="edit-amount"
               type="text"
               placeholder="0.00"
               value={amount}
@@ -133,9 +136,9 @@ export function AddTransactionDialog() {
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="edit-description">Description</Label>
             <Input
-              id="description"
+              id="edit-description"
               placeholder="What was this for?"
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -152,7 +155,7 @@ export function AddTransactionDialog() {
           />
 
           <Button type="submit" className="w-full" size="lg">
-            Add {type === 'expense' ? 'Expense' : 'Income'}
+            Save Changes
           </Button>
         </form>
       </DialogContent>
