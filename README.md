@@ -1,4 +1,4 @@
-# Expense Ledger
+# Pocket Ledger
 
 A modern, intuitive expense tracking application built with React, TypeScript, and Tailwind CSS.
 

@@ -1,6 +1,6 @@
 {
-  "name": "Expense Ledger",
-  "short_name": "Expense Ledger",
+  "name": "Pocket Ledger",
+  "short_name": "Pocket Ledger",
   "description": "A modern, intuitive expense tracking app to manage your income, expenses, budgets, and financial analytics.",
   "start_url": "/",
   "display": "standalone",
