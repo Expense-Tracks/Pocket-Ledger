@@ -42,11 +42,11 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    cssCodeSplit: false, // Bundle all CSS into one file injected in <head> to avoid JS→CSS chain
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ["react", "react-dom", "react-router-dom"],
-          recharts: ["recharts"],
           emoji: ["emoji-picker-react"],
         },
       },
