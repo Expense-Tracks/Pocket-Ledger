@@ -116,16 +116,50 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   // Auto-generate transactions from active recurring rules
   useEffect(() => {
     if (!hydrated) return;
+    
     const now = new Date();
+    now.setHours(23, 59, 59, 999); // End of today for comparison
     const generated: Transaction[] = [];
-    const updated = recurringTransactions.map(r => {
-      if (!r.active) return r;
-      if (r.endDate && new Date(r.endDate) < now) return { ...r, active: false };
-      let cursor = r.lastGenerated || r.startDate;
-      let next = getNextDate(cursor, r.frequency);
-      let lastGen = cursor;
-      while (next <= now) {
-        if (r.endDate && next > new Date(r.endDate)) break;
+    // Track which recurring IDs need lastGenerated updates
+    const updates = new Map<string, { lastGenerated: string; active?: boolean }>();
+    
+    recurringTransactions.forEach(r => {
+      if (!r.active) return;
+      
+      // Deactivate if past end date
+      if (r.endDate && new Date(r.endDate) < now) {
+        updates.set(r.id, { lastGenerated: r.lastGenerated || r.startDate, active: false });
+        return;
+      }
+      
+      // Determine where to start generating from
+      let newLastGenerated = r.lastGenerated || r.startDate;
+      let didGenerate = false;
+      
+      // If this is the first generation and start date is today or earlier
+      if (!r.lastGenerated) {
+        const startDate = new Date(r.startDate);
+        if (startDate <= now) {
+          generated.push({
+            id: crypto.randomUUID(),
+            amount: r.amount,
+            type: r.type,
+            category: r.category,
+            paymentMethod: r.paymentMethod,
+            description: r.description,
+            date: startDate.toISOString(),
+            createdAt: new Date().toISOString(),
+          });
+          newLastGenerated = startDate.toISOString();
+          didGenerate = true;
+        }
+      }
+      
+      // Generate all subsequent transactions up to today
+      let nextDate = getNextDate(newLastGenerated, r.frequency);
+      while (nextDate <= now) {
+        if (r.endDate && nextDate > new Date(r.endDate)) break;
+        
         generated.push({
           id: crypto.randomUUID(),
           amount: r.amount,
@@ -133,17 +167,32 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
           category: r.category,
           paymentMethod: r.paymentMethod,
           description: r.description,
-          date: next.toISOString(),
+          date: nextDate.toISOString(),
           createdAt: new Date().toISOString(),
         });
-        lastGen = next.toISOString();
-        next = getNextDate(lastGen, r.frequency);
+        newLastGenerated = nextDate.toISOString();
+        didGenerate = true;
+        nextDate = getNextDate(newLastGenerated, r.frequency);
       }
-      return lastGen !== cursor ? { ...r, lastGenerated: lastGen } : r;
+      
+      if (didGenerate) {
+        updates.set(r.id, { lastGenerated: newLastGenerated });
+      }
     });
-    if (generated.length > 0) {
-      setTransactions(prev => [...generated, ...prev]);
-      setRecurringTransactions(updated);
+    
+    // Apply updates using functional state setters to avoid overwriting concurrent changes
+    if (updates.size > 0 || generated.length > 0) {
+      if (generated.length > 0) {
+        setTransactions(prev => [...generated, ...prev]);
+      }
+      if (updates.size > 0) {
+        setRecurringTransactions(prev =>
+          prev.map(r => {
+            const update = updates.get(r.id);
+            return update ? { ...r, ...update } : r;
+          })
+        );
+      }
     }
   }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -233,7 +282,52 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   }, [budgets]);
 
   const addRecurring = useCallback((r: Omit<RecurringTransaction, 'id'>) => {
-    setRecurringTransactions(prev => [...prev, { ...r, id: crypto.randomUUID() }]);
+    const id = crypto.randomUUID();
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+    const startDate = new Date(r.startDate);
+
+    // If start date is today or earlier, immediately generate the first transaction
+    // and set lastGenerated so the hydration effect won't duplicate it
+    if (r.active && startDate <= now) {
+      const generated: Transaction[] = [];
+      let lastGen = r.startDate;
+
+      // First transaction on start date
+      generated.push({
+        id: crypto.randomUUID(),
+        amount: r.amount,
+        type: r.type,
+        category: r.category,
+        paymentMethod: r.paymentMethod,
+        description: r.description,
+        date: startDate.toISOString(),
+        createdAt: new Date().toISOString(),
+      });
+
+      // Catch up any subsequent occurrences up to today
+      let nextDate = getNextDate(lastGen, r.frequency);
+      while (nextDate <= now) {
+        if (r.endDate && nextDate > new Date(r.endDate)) break;
+        generated.push({
+          id: crypto.randomUUID(),
+          amount: r.amount,
+          type: r.type,
+          category: r.category,
+          paymentMethod: r.paymentMethod,
+          description: r.description,
+          date: nextDate.toISOString(),
+          createdAt: new Date().toISOString(),
+        });
+        lastGen = nextDate.toISOString();
+        nextDate = getNextDate(lastGen, r.frequency);
+      }
+
+      setTransactions(prev => [...generated, ...prev]);
+      setRecurringTransactions(prev => [...prev, { ...r, id, lastGenerated: lastGen }]);
+    } else {
+      setRecurringTransactions(prev => [...prev, { ...r, id }]);
+    }
   }, []);
 
   const updateRecurring = useCallback((id: string, updates: Partial<RecurringTransaction>) => {

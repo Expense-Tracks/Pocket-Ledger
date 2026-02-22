@@ -176,14 +176,28 @@ export default function Recurring() {
                   </Select>
                 </div>
 
-                <DatePicker date={startDate} onDateChange={setStartDate} label="Start Date" placeholder="Select start date" />
+                <DatePicker 
+                  date={startDate} 
+                  onDateChange={setStartDate} 
+                  label="Start Date" 
+                  placeholder="Select start date"
+                  allowFuture={true}
+                  showShortcuts={false}
+                />
 
                 <div className="flex items-center justify-between">
                   <Label htmlFor="has-end">Set end date</Label>
                   <Switch id="has-end" checked={hasEndDate} onCheckedChange={setHasEndDate} />
                 </div>
                 {hasEndDate && (
-                  <DatePicker date={endDate} onDateChange={setEndDate} label="End Date" placeholder="Select end date" />
+                  <DatePicker 
+                    date={endDate} 
+                    onDateChange={setEndDate} 
+                    label="End Date" 
+                    placeholder="Select end date"
+                    allowFuture={true}
+                    showShortcuts={false}
+                  />
                 )}
 
                 <Button type="submit" className="w-full" size="lg">
