@@ -199,7 +199,12 @@ export default function Analytics() {
               <BarChart data={monthlyData} barGap={4} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={v => formatCurrency(v)} width={80} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={v => {
+                  const abs = Math.abs(v);
+                  if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+                  if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+                  return v.toString();
+                }} width={50} />
                 <Tooltip
                   active={tooltipActive}
                   formatter={(value: number) => [formatCurrency(value), '']}

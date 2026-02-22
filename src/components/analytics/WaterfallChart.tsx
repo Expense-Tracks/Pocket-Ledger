@@ -11,8 +11,15 @@ interface Props {
 }
 
 export default function WaterfallChart({ transactions, from, to, formatCurrency }: Props) {
+  const compactTick = (v: number) => {
+    const abs = Math.abs(v);
+    if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+    return v.toString();
+  };
+
   const data = useMemo(() => {
-    const items: { name: string; value: number; start: number; end: number; type: 'income' | 'expense' | 'net' }[] = [];
+    const items: { name: string; range: [number, number]; displayValue: number; type: 'income' | 'expense' | 'net' }[] = [];
     let cursor = startOfMonth(from);
     const endDate = endOfMonth(to);
     let running = 0;
@@ -20,10 +27,9 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
     while (cursor <= endDate) {
       const ms = startOfMonth(cursor);
       const me = endOfMonth(cursor);
-      // Filter transactions within both the month AND the selected range
       const monthTxns = transactions.filter(t => {
         const txDate = new Date(t.date);
-        return isWithinInterval(txDate, { start: ms, end: me }) && 
+        return isWithinInterval(txDate, { start: ms, end: me }) &&
                isWithinInterval(txDate, { start: from, end: to });
       });
       const income = monthTxns.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
@@ -31,19 +37,24 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
       const label = format(ms, 'MMM');
 
       if (income > 0) {
-        items.push({ name: `${label} +`, value: income, start: running, end: running + income, type: 'income' });
+        items.push({ name: `${label} +`, range: [0, income], displayValue: income, type: 'income' });
         running += income;
       }
       if (expense > 0) {
-        items.push({ name: `${label} −`, value: -expense, start: running, end: running - expense, type: 'expense' });
+        // Expense bar goes downward from 0
+        items.push({ name: `${label} −`, range: [-expense, 0], displayValue: expense, type: 'expense' });
         running -= expense;
       }
       cursor = addMonths(cursor, 1);
     }
 
-    // Net total bar
     if (items.length > 0) {
-      items.push({ name: 'Net', value: running, start: 0, end: running, type: 'net' });
+      items.push({
+        name: 'Net',
+        range: running >= 0 ? [0, running] : [running, 0],
+        displayValue: running,
+        type: 'net',
+      });
     }
     return items;
   }, [transactions, from, to]);
@@ -65,26 +76,23 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
         <BarChart data={data} barCategoryGap="20%">
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
           <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={v => formatCurrency(v)} />
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 11 }}
+            tickFormatter={compactTick}
+            width={50}
+          />
           <Tooltip
-            formatter={(value: number) => [formatCurrency(Math.abs(value)), '']}
-            contentStyle={{
-              backgroundColor: 'hsl(var(--card))',
-              border: '1px solid hsl(var(--border))',
-              borderRadius: '0.75rem',
-            }}
-            labelStyle={{ color: 'hsl(var(--foreground))' }}
-            itemStyle={{ color: 'hsl(var(--foreground))' }}
+            cursor={false}
             content={({ active, payload }) => {
               if (!active || !payload || !payload.length) return null;
-              const entry = payload[0].payload as typeof data[0];
-              const color = 
+              const entry = payload[0]?.payload;
+              if (!entry) return null;
+              const color =
                 entry.type === 'income' ? 'hsl(142, 76%, 36%)' :
                 entry.type === 'expense' ? 'hsl(0, 84%, 60%)' :
                 'hsl(220, 60%, 50%)';
-              const displayValue = entry.type === 'net' 
-                ? formatCurrency(entry.value)
-                : formatCurrency(Math.abs(entry.value));
               return (
                 <div style={{
                   backgroundColor: 'hsl(var(--card))',
@@ -92,16 +100,13 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
                   borderRadius: '0.75rem',
                   padding: '8px 12px',
                 }}>
-                  <p style={{ margin: 0, fontWeight: 600, color }}>{displayValue}</p>
+                  <p style={{ margin: 0, fontWeight: 600, color }}>{formatCurrency(Math.abs(entry.displayValue))}</p>
                 </div>
               );
             }}
           />
           <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
-          {/* Invisible base bar */}
-          <Bar dataKey="start" stackId="waterfall" fill="transparent" isAnimationActive={false} />
-          {/* Visible segment */}
-          <Bar dataKey={(entry: typeof data[0]) => entry.end - entry.start} stackId="waterfall" radius={[3, 3, 0, 0]}>
+          <Bar dataKey="range" radius={[3, 3, 0, 0]} isAnimationActive={false}>
             {data.map((entry, i) => (
               <Cell
                 key={i}

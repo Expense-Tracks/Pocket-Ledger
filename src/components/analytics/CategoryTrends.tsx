@@ -75,7 +75,12 @@ export default function CategoryTrends({ transactions, categories, from, to, for
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
           <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
-          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={v => formatCurrency(v)} />
+          <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11 }} tickFormatter={v => {
+            const abs = Math.abs(v);
+            if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+            if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
+            return v.toString();
+          }} width={50} />
           <Tooltip
             formatter={(value: number, name: string) => {
               const cat = topCats.find(c => c.id === name);

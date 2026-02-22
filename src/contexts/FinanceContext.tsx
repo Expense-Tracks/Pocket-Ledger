@@ -210,16 +210,14 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const deleteTransaction = useCallback((id: string) => {
-    setTransactions(prev => {
-      const t = prev.find(x => x.id === id);
-      if (t) {
-        toast('Transaction deleted', {
-          action: { label: 'Undo', onClick: () => setTransactions(p => [t, ...p]) },
-        });
-      }
-      return prev.filter(x => x.id !== id);
-    });
-  }, []);
+    const t = transactions.find(x => x.id === id);
+    if (t) {
+      toast('Transaction deleted', {
+        action: { label: 'Undo', onClick: () => setTransactions(p => [t, ...p]) },
+      });
+    }
+    setTransactions(prev => prev.filter(x => x.id !== id));
+  }, [transactions]);
 
   const addCategory = useCallback((c: Omit<Category, 'id' | 'isDefault'>) => {
     setCategories(prev => [...prev, { ...c, id: crypto.randomUUID(), isDefault: false }]);
@@ -227,14 +225,24 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   const deleteCategory = useCallback((id: string) => {
     const removed = categories.find(c => c.id === id && !c.isDefault);
+    if (!removed) {
+      setCategories(prev => prev.filter(c => c.id !== id || c.isDefault));
+      return;
+    }
+    // Track which transactions had this category so undo can restore them
+    const affectedTxnIds = transactions.filter(t => t.category === id).map(t => t.id);
     setCategories(prev => prev.filter(c => c.id !== id || c.isDefault));
     setTransactions(prev => prev.map(t => t.category === id ? { ...t, category: 'uncategorized' } : t));
-    if (removed) {
-      toast('Category deleted', {
-        action: { label: 'Undo', onClick: () => setCategories(p => [...p, removed]) },
-      });
-    }
-  }, [categories]);
+    toast('Category deleted', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          setCategories(p => [...p, removed]);
+          setTransactions(p => p.map(t => affectedTxnIds.includes(t.id) ? { ...t, category: id } : t));
+        },
+      },
+    });
+  }, [categories, transactions]);
 
   const addPaymentMethod = useCallback((p: Omit<PaymentMethod, 'id' | 'isDefault'>) => {
     setPaymentMethods(prev => [...prev, { ...p, id: crypto.randomUUID(), isDefault: false }]);
@@ -242,14 +250,24 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
   const deletePaymentMethod = useCallback((id: string) => {
     const removed = paymentMethods.find(p => p.id === id && !p.isDefault);
+    if (!removed) {
+      setPaymentMethods(prev => prev.filter(p => p.id !== id || p.isDefault));
+      return;
+    }
+    // Track which transactions had this payment method so undo can restore them
+    const affectedTxnIds = transactions.filter(t => t.paymentMethod === id).map(t => t.id);
     setPaymentMethods(prev => prev.filter(p => p.id !== id || p.isDefault));
     setTransactions(prev => prev.map(t => t.paymentMethod === id ? { ...t, paymentMethod: 'other' } : t));
-    if (removed) {
-      toast('Payment method deleted', {
-        action: { label: 'Undo', onClick: () => setPaymentMethods(p => [...p, removed]) },
-      });
-    }
-  }, [paymentMethods]);
+    toast('Payment method deleted', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          setPaymentMethods(p => [...p, removed]);
+          setTransactions(p => p.map(t => affectedTxnIds.includes(t.id) ? { ...t, paymentMethod: id } : t));
+        },
+      },
+    });
+  }, [paymentMethods, transactions]);
 
   const addBudget = useCallback((b: Omit<Budget, 'id' | 'spent'>) => {
     setBudgets(prev => [...prev, { ...b, id: crypto.randomUUID(), spent: 0 }]);
