@@ -48,6 +48,16 @@ export interface RecurringTransaction {
   active: boolean;
 }
 
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  icon: string;
+  targetAmount: number;
+  savedAmount: number;
+  targetDate: string; // ISO string
+  createdAt: string;
+}
+
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'groceries', name: 'Groceries', type: 'expense', icon: '🛒', isDefault: true },
   { id: 'transport', name: 'Transportation', type: 'expense', icon: '🚗', isDefault: true },

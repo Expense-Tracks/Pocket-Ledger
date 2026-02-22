@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, RefreshCw, MoreHorizontal, BarChart3, Target, Settings } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, RefreshCw, MoreHorizontal, BarChart3, Target, PiggyBank, Settings } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const primaryItems = [
@@ -12,6 +12,7 @@ const primaryItems = [
 const moreItems = [
   { to: '/analytics', icon: BarChart3, label: 'Analytics' },
   { to: '/recurring', icon: RefreshCw, label: 'Recurring' },
+  { to: '/savings', icon: PiggyBank, label: 'Savings' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 

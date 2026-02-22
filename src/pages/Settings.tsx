@@ -51,7 +51,7 @@ import { ExportData } from '@/contexts/FinanceContext';
 
 export default function Settings() {
   const { settings, updateSettings, formatCurrency, resetSettings } = useSettings();
-  const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, importData } = useFinance();
+  const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, savingsGoals, importData } = useFinance();
 
   const [newCategory, setNewCategory] = useState<{ name: string; icon: string; type: 'income' | 'expense' }>({ name: '', icon: '📁', type: 'expense' });
   const [newPayment, setNewPayment] = useState({ name: '', icon: '💳' });
@@ -103,6 +103,7 @@ export default function Settings() {
     paymentMethods,
     budgets,
     recurringTransactions,
+    savingsGoals,
   });
 
   const downloadFile = (content: string, filename: string, type: string) => {
@@ -444,7 +445,7 @@ export default function Settings() {
                   <DialogHeader>
                     <DialogTitle>Import Data</DialogTitle>
                     <DialogDescription>
-                      {pendingImport && `Found ${pendingImport.transactions.length} transactions, ${pendingImport.categories.length} categories, ${pendingImport.budgets.length} budgets, and ${pendingImport.recurringTransactions.length} recurring rules.`}
+                      {pendingImport && `Found ${pendingImport.transactions.length} transactions, ${pendingImport.categories.length} categories, ${pendingImport.budgets.length} budgets, ${pendingImport.recurringTransactions.length} recurring rules, and ${(pendingImport.savingsGoals || []).length} savings goals.`}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3 py-2">

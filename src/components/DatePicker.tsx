@@ -13,6 +13,7 @@ interface DatePickerProps {
   label?: string;
   placeholder?: string;
   showShortcuts?: boolean;
+  allowFuture?: boolean;
 }
 
 export function DatePicker({ 
@@ -20,7 +21,8 @@ export function DatePicker({
   onDateChange, 
   label = 'Date', 
   placeholder = 'Pick a date',
-  showShortcuts = true 
+  showShortcuts = true,
+  allowFuture = false,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Date>(date || new Date());
@@ -54,7 +56,9 @@ export function DatePicker({
 
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
+  const years = allowFuture
+    ? Array.from({ length: 110 }, (_, i) => currentYear + 10 - i)
+    : Array.from({ length: 100 }, (_, i) => currentYear - i);
 
   // Check if we're viewing the current month/year
   const isCurrentMonth = month.getMonth() === currentMonth && month.getFullYear() === currentYear;
@@ -63,8 +67,7 @@ export function DatePicker({
   const handleMonthChange = (monthIndex: string) => {
     const newMonth = new Date(month);
     newMonth.setMonth(parseInt(monthIndex));
-    // Don't allow future months
-    if (newMonth <= new Date()) {
+    if (allowFuture || newMonth <= new Date()) {
       setMonth(newMonth);
     }
   };
@@ -72,16 +75,14 @@ export function DatePicker({
   const handleYearChange = (year: string) => {
     const newMonth = new Date(month);
     newMonth.setFullYear(parseInt(year));
-    // Don't allow future dates
-    if (newMonth <= new Date()) {
+    if (allowFuture || newMonth <= new Date()) {
       setMonth(newMonth);
     }
   };
 
   const handleNextMonth = () => {
     const nextMonth = addMonths(month, 1);
-    // Only allow if not going into future
-    if (nextMonth <= new Date()) {
+    if (allowFuture || nextMonth <= new Date()) {
       setMonth(nextMonth);
     }
   };
@@ -150,7 +151,7 @@ export function DatePicker({
                     size="icon"
                     className="h-8 w-8 flex-shrink-0 sm:hidden"
                     onClick={handleNextMonth}
-                    disabled={isCurrentMonth || isFutureMonth}
+                    disabled={!allowFuture && (isCurrentMonth || isFutureMonth)}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -163,8 +164,8 @@ export function DatePicker({
                     </SelectTrigger>
                     <SelectContent>
                       {months.map((m, i) => {
-                        // Disable future months in current year
-                        const isDisabled = month.getFullYear() === currentYear && i > currentMonth;
+                        // Disable future months in current year (unless allowFuture)
+                        const isDisabled = !allowFuture && month.getFullYear() === currentYear && i > currentMonth;
                         return (
                           <SelectItem key={i} value={i.toString()} disabled={isDisabled}>
                             {m}
@@ -193,7 +194,7 @@ export function DatePicker({
                   size="icon"
                   className="h-8 w-8 flex-shrink-0 hidden sm:flex order-3"
                   onClick={handleNextMonth}
-                  disabled={isCurrentMonth || isFutureMonth}
+                  disabled={!allowFuture && (isCurrentMonth || isFutureMonth)}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -206,7 +207,7 @@ export function DatePicker({
                 onSelect={handleSelect}
                 month={month}
                 onMonthChange={setMonth}
-                disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                disabled={(date) => (!allowFuture && date > new Date()) || date < new Date('1900-01-01')}
                 showOutsideDays={true}
                 className="p-0"
                 classNames={{

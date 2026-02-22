@@ -1,4 +1,4 @@
-import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, DEFAULT_CATEGORIES, DEFAULT_PAYMENT_METHODS } from '@/types/finance';
+import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal, DEFAULT_CATEGORIES, DEFAULT_PAYMENT_METHODS } from '@/types/finance';
 
 const KEYS = {
   transactions: 'finance_transactions',
@@ -45,3 +45,7 @@ export function loadRecurring(): RecurringTransaction[] {
   return load<RecurringTransaction[]>(KEYS.recurring, []);
 }
 export function saveRecurring(r: RecurringTransaction[]) { save(KEYS.recurring, r); }
+export function loadSavingsGoals(): SavingsGoal[] {
+  return load<SavingsGoal[]>('finance_savings_goals', []);
+}
+export function saveSavingsGoals(g: SavingsGoal[]) { save('finance_savings_goals', g); }

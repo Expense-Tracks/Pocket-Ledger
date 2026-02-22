@@ -1,7 +1,7 @@
 import { useFinance } from '@/contexts/FinanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { TransactionList } from '@/components/TransactionList';
-import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, PiggyBank } from 'lucide-react';
 
 export default function Dashboard() {
   const { transactions, getBalance } = useFinance();
@@ -43,6 +43,9 @@ export default function Dashboard() {
         {/* Quick budget overview */}
         <BudgetSummary />
 
+        {/* Savings goals overview */}
+        <SavingsGoalsSummary />
+
         {/* Recent transactions */}
         <div className="mt-6">
           <h2 className="mb-3 text-lg font-semibold">Recent Transactions</h2>
@@ -54,7 +57,7 @@ export default function Dashboard() {
 }
 
 function BudgetSummary() {
-  const { budgets, categories } = useFinance();
+  const { budgets, budgetsWithSpent, categories } = useFinance();
   const { formatCurrency } = useSettings();
   if (budgets.length === 0) return null;
 
@@ -62,7 +65,7 @@ function BudgetSummary() {
     <div>
       <h2 className="mb-3 text-lg font-semibold">Budget Overview</h2>
       <div className="space-y-2">
-        {budgets.slice(0, 3).map(b => {
+        {budgetsWithSpent.slice(0, 3).map(b => {
           const cat = categories.find(c => c.id === b.category);
           const pct = b.amount > 0 ? Math.min((b.spent / b.amount) * 100, 100) : 0;
           const isWarning = pct >= 80;
@@ -78,6 +81,37 @@ function BudgetSummary() {
                   className={`h-full rounded-full transition-all duration-500 ${
                     isOver ? 'bg-expense' : isWarning ? 'bg-warning' : 'bg-primary'
                   }`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+function SavingsGoalsSummary() {
+  const { savingsGoals } = useFinance();
+  const { formatCurrency } = useSettings();
+  if (savingsGoals.length === 0) return null;
+
+  return (
+    <div className="mt-6">
+      <h2 className="mb-3 text-lg font-semibold">Savings Goals</h2>
+      <div className="space-y-2">
+        {savingsGoals.slice(0, 3).map(goal => {
+          const pct = goal.targetAmount > 0 ? Math.min((goal.savedAmount / goal.targetAmount) * 100, 100) : 0;
+          const isComplete = pct >= 100;
+          return (
+            <div key={goal.id} className="rounded-xl bg-card p-3">
+              <div className="flex justify-between text-sm">
+                <span className="font-medium">{goal.icon} {goal.name}</span>
+                <span className="text-muted-foreground">{formatCurrency(goal.savedAmount)} / {formatCurrency(goal.targetAmount)}</span>
+              </div>
+              <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${isComplete ? 'bg-income' : 'bg-primary'}`}
                   style={{ width: `${pct}%` }}
                 />
               </div>

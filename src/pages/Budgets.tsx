@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function Budgets() {
-  const { budgets, categories, addBudget, deleteBudget } = useFinance();
+  const { budgets, budgetsWithSpent, categories, addBudget, deleteBudget } = useFinance();
   const { formatCurrency } = useSettings();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState('');
@@ -91,7 +91,7 @@ export default function Budgets() {
           </div>
         ) : (
           <div className="space-y-3">
-            {budgets.map(b => {
+            {budgetsWithSpent.map(b => {
               const cat = categories.find(c => c.id === b.category);
               const pct = b.amount > 0 ? Math.min((b.spent / b.amount) * 100, 100) : 0;
               const isWarning = pct >= 80;

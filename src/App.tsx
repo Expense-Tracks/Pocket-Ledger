@@ -9,6 +9,7 @@ const Transactions = lazy(() => import("./pages/Transactions"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Budgets = lazy(() => import("./pages/Budgets"));
 const Recurring = lazy(() => import("./pages/Recurring"));
+const SavingsGoals = lazy(() => import("./pages/SavingsGoals"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AddTransactionDialog = lazy(() =>
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/budgets" element={<Budgets />} />
             <Route path="/recurring" element={<Recurring />} />
+            <Route path="/savings" element={<SavingsGoals />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
