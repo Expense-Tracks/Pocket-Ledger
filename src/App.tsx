@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FinanceProvider } from "@/contexts/FinanceContext";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 import { BottomNav } from "@/components/BottomNav";
+import { useSwUpdate } from "@/hooks/use-sw-update";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Transactions = lazy(() => import("./pages/Transactions"));
@@ -22,31 +23,35 @@ const ToastProviders = lazy(() =>
   import("./components/ToastProviders").then(m => ({ default: m.ToastProviders }))
 );
 
-const App = () => (
-  <SettingsProvider>
-    <FinanceProvider>
-      <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-        <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground">Loading…</div>}>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/analytics" element={<Analytics />} />
-            <Route path="/budgets" element={<Budgets />} />
-            <Route path="/recurring" element={<Recurring />} />
-            <Route path="/savings" element={<SavingsGoals />} />
-            <Route path="/debts" element={<Debts />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-        <Suspense fallback={null}>
-          <AddTransactionDialog />
-        </Suspense>
-        <BottomNav />
-      </BrowserRouter>
-    </FinanceProvider>
-  </SettingsProvider>
-);
+const App = () => {
+  useSwUpdate();
+
+  return (
+    <SettingsProvider>
+      <FinanceProvider>
+        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+          <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground">Loading…</div>}>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/budgets" element={<Budgets />} />
+              <Route path="/recurring" element={<Recurring />} />
+              <Route path="/savings" element={<SavingsGoals />} />
+              <Route path="/debts" element={<Debts />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <Suspense fallback={null}>
+            <AddTransactionDialog />
+          </Suspense>
+          <BottomNav />
+        </BrowserRouter>
+      </FinanceProvider>
+    </SettingsProvider>
+  );
+};
 
 // Lazy-mount toast systems after initial render
 const AppWithToasts = () => (
