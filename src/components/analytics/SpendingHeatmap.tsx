@@ -1,8 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   eachDayOfInterval, format, getDay, startOfWeek, endOfWeek, isWithinInterval,
   startOfMonth, endOfMonth, isSameMonth, addMonths, differenceInCalendarMonths,
 } from 'date-fns';
+import { Button } from '@/components/ui/button';
 import type { Transaction } from '@/types/finance';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 
 export default function SpendingHeatmap({ transactions, from, to, formatCurrency }: Props) {
   const isSingleMonth = isSameMonth(from, to);
+  const [showAll, setShowAll] = useState(false);
 
   // Calendar view for single month
   const calendarData = useMemo(() => {
@@ -149,7 +151,7 @@ export default function SpendingHeatmap({ transactions, from, to, formatCurrency
           <>
             {/* Monthly bars */}
             <div className="space-y-2">
-              {monthlyData.months.map((month) => (
+              {(showAll ? monthlyData.months : monthlyData.months.slice(0, 3)).map((month) => (
                 <div key={month.label} className="flex items-center gap-3">
                   <div className="w-14 text-xs text-muted-foreground font-medium">{month.label}</div>
                   <div className="flex-1 h-8 rounded-md bg-muted/40 overflow-hidden relative">
@@ -166,6 +168,20 @@ export default function SpendingHeatmap({ transactions, from, to, formatCurrency
                 </div>
               ))}
             </div>
+
+            {/* See more button */}
+            {monthlyData.months.length > 3 && (
+              <div className="mt-3 text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAll(!showAll)}
+                  className="text-xs"
+                >
+                  {showAll ? 'Show less' : `Show ${monthlyData.months.length - 3} more months`}
+                </Button>
+              </div>
+            )}
 
             {/* Legend */}
             <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground">

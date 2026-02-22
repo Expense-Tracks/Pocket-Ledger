@@ -73,6 +73,29 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
               border: '1px solid hsl(var(--border))',
               borderRadius: '0.75rem',
             }}
+            labelStyle={{ color: 'hsl(var(--foreground))' }}
+            itemStyle={{ color: 'hsl(var(--foreground))' }}
+            content={({ active, payload }) => {
+              if (!active || !payload || !payload.length) return null;
+              const entry = payload[0].payload as typeof data[0];
+              const color = 
+                entry.type === 'income' ? 'hsl(142, 76%, 36%)' :
+                entry.type === 'expense' ? 'hsl(0, 84%, 60%)' :
+                'hsl(220, 60%, 50%)';
+              const displayValue = entry.type === 'net' 
+                ? formatCurrency(entry.value)
+                : formatCurrency(Math.abs(entry.value));
+              return (
+                <div style={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '0.75rem',
+                  padding: '8px 12px',
+                }}>
+                  <p style={{ margin: 0, fontWeight: 600, color }}>{displayValue}</p>
+                </div>
+              );
+            }}
           />
           <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
           {/* Invisible base bar */}
@@ -87,7 +110,7 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
                     ? 'hsl(var(--income))'
                     : entry.type === 'expense'
                     ? 'hsl(var(--expense))'
-                    : 'hsl(var(--primary))'
+                    : 'hsl(220, 60%, 50%)'
                 }
               />
             ))}

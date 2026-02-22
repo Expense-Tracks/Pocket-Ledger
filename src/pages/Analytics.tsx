@@ -26,6 +26,20 @@ export default function Analytics() {
     to: endOfMonth(new Date()),
   });
 
+  // Calculate min date: earliest transaction or 1 year back, whichever is more recent
+  const minDate = useMemo(() => {
+    if (transactions.length === 0) {
+      return startOfMonth(subDays(new Date(), 365));
+    }
+    const earliestTransaction = transactions.reduce((earliest, t) => {
+      const tDate = new Date(t.date);
+      return tDate < earliest ? tDate : earliest;
+    }, new Date(transactions[0].date));
+    
+    const oneYearAgo = startOfMonth(subDays(new Date(), 365));
+    return earliestTransaction < oneYearAgo ? earliestTransaction : oneYearAgo;
+  }, [transactions]);
+
   // Expense by category (filtered by date range)
   const categoryData = useMemo(() => {
     const monthExpenses = transactions.filter(
@@ -133,7 +147,7 @@ export default function Analytics() {
       <div className="mx-auto max-w-lg px-4 pt-6">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold">Analytics</h1>
-          <DateRangePicker value={range} onChange={setRange} />
+          <DateRangePicker value={range} onChange={setRange} minDate={minDate} />
         </div>
 
         {/* Pie Chart - Expenses by Category */}
@@ -185,7 +199,7 @@ export default function Analytics() {
               <BarChart data={monthlyData} barGap={4} onMouseMove={handleMouseMove} onMouseLeave={handleMouseLeave}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={v => formatCurrency(v)} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} tickFormatter={v => formatCurrency(v)} width={80} />
                 <Tooltip
                   active={tooltipActive}
                   formatter={(value: number) => [formatCurrency(value), '']}

@@ -29,14 +29,14 @@ export default function Dashboard() {
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Income</span>
             </div>
-            <p className="mt-1 text-xl font-bold text-income">{formatCurrency(income)}</p>
+            <p className="mt-1 text-xl font-bold text-income truncate">{formatCurrency(income)}</p>
           </div>
           <div className="stat-card rounded-2xl bg-expense/10">
             <div className="flex items-center gap-2 text-expense">
               <TrendingDown className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Expenses</span>
             </div>
-            <p className="mt-1 text-xl font-bold text-expense">{formatCurrency(expense)}</p>
+            <p className="mt-1 text-xl font-bold text-expense truncate">{formatCurrency(expense)}</p>
           </div>
         </div>
 

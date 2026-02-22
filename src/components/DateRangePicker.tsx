@@ -14,6 +14,8 @@ export interface DateRangeValue {
 interface DateRangePickerProps {
   value: DateRangeValue;
   onChange: (range: DateRangeValue) => void;
+  minDate?: Date;
+  maxDate?: Date;
 }
 
 const PRESETS = [
@@ -24,15 +26,20 @@ const PRESETS = [
   { label: 'This Year', range: () => ({ from: startOfYear(new Date()), to: endOfMonth(new Date()) }) },
 ];
 
-export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
+export function DateRangePicker({ value, onChange, minDate, maxDate }: DateRangePickerProps) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Date>(value.from);
   const [draft, setDraft] = useState<DateRange | undefined>({ from: value.from, to: value.to });
 
-  const now = new Date();
+  const now = maxDate || new Date();
   const isCurrentMonth = month.getMonth() === now.getMonth() && month.getFullYear() === now.getFullYear();
 
-  const handlePrevMonth = () => setMonth(subMonths(month, 1));
+  const handlePrevMonth = () => {
+    const prev = subMonths(month, 1);
+    if (!minDate || prev >= startOfMonth(minDate)) {
+      setMonth(prev);
+    }
+  };
   const handleNextMonth = () => {
     const next = addMonths(month, 1);
     if (next <= now) setMonth(next);
@@ -111,7 +118,11 @@ export function DateRangePicker({ value, onChange }: DateRangePickerProps) {
               month={month}
               onMonthChange={setMonth}
               numberOfMonths={1}
-              disabled={(date) => date > new Date()}
+              disabled={(date) => {
+                if (date > now) return true;
+                if (minDate && date < minDate) return true;
+                return false;
+              }}
               showOutsideDays
               className="p-0"
               classNames={{
