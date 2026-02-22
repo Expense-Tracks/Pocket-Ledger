@@ -100,7 +100,11 @@ export default function WaterfallChart({ transactions, from, to, formatCurrency 
                   borderRadius: '0.75rem',
                   padding: '8px 12px',
                 }}>
-                  <p style={{ margin: 0, fontWeight: 600, color }}>{formatCurrency(Math.abs(entry.displayValue))}</p>
+                  <p style={{ margin: 0, fontWeight: 600, color }}>
+                    {entry.type === 'expense'
+                      ? `−${formatCurrency(entry.displayValue)}`
+                      : formatCurrency(entry.displayValue)}
+                  </p>
                 </div>
               );
             }}
