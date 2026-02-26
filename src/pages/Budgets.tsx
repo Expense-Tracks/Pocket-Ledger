@@ -69,7 +69,7 @@ export default function Budgets() {
                 </div>
                 <div>
                   <Label>Period</Label>
-                  <Select value={period} onValueChange={v => setPeriod(v as any)}>
+                  <Select value={period} onValueChange={v => setPeriod(v as 'weekly' | 'monthly' | 'yearly')}>
                     <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="weekly">Weekly</SelectItem>

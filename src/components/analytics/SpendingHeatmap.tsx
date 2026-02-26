@@ -108,7 +108,7 @@ export default function SpendingHeatmap({ transactions, from, to, formatCurrency
       </p>
 
       {isSingleMonth && calendarData ? (
-        calendarData.hasData || true ? (
+        calendarData.hasData ? (
           <>
             {/* Day labels */}
             <div className="flex gap-1 mb-1">
@@ -147,7 +147,7 @@ export default function SpendingHeatmap({ transactions, from, to, formatCurrency
           <p className="py-8 text-center text-sm text-muted-foreground">No expenses in this period</p>
         )
       ) : monthlyData ? (
-        monthlyData.hasData || true ? (
+        monthlyData.hasData ? (
           <>
             {/* Monthly bars */}
             <div className="space-y-2">

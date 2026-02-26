@@ -32,13 +32,13 @@ export default function CategoryTrends({ transactions, categories, from, to, for
     });
 
     // Build monthly data
-    const rows: Record<string, any>[] = [];
+    const rows: Record<string, number | string>[] = [];
     let cursor = startOfMonth(from);
     const endDate = endOfMonth(to);
     while (cursor <= endDate) {
       const ms = startOfMonth(cursor);
       const me = endOfMonth(cursor);
-      const row: Record<string, any> = { month: format(ms, 'MMM yy') };
+      const row: Record<string, number | string> = { month: format(ms, 'MMM yy') };
       topCatIds.forEach(catId => {
         row[catId] = transactions
           .filter(t => {
