@@ -155,7 +155,7 @@ export default function Analytics() {
           <h2 className="mb-1 text-base font-semibold">Expenses by Category</h2>
           <p className="mb-4 text-sm text-muted-foreground">{rangeLabel}</p>
           {categoryData.length > 0 ? (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 pointer-events-none">
               <ResponsiveContainer width={160} height={160}>
                 <PieChart>
                   <Pie
