@@ -70,7 +70,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
 
   const formatCurrency = (amount: number): string => {
     const { symbol, position } = settings.currency;
-    const formatted = amount.toFixed(2);
+    const formatted = amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return position === 'before' ? `${symbol}${formatted}` : `${formatted}${symbol}`;
   };
 

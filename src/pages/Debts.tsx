@@ -13,7 +13,7 @@ import { EditDebtDialog } from '@/components/EditDebtDialog';
 
 export default function Debts() {
   const { debts } = useFinance();
-  const { settings } = useSettings();
+  const { settings, formatCurrency } = useSettings();
   const [addOpen, setAddOpen] = useState(false);
   const [editDebt, setEditDebt] = useState<Debt | null>(null);
 
@@ -38,13 +38,13 @@ export default function Debts() {
           <Card className="p-4">
             <p className="text-sm text-muted-foreground">Owed to Me</p>
             <p className="text-2xl font-bold text-income">
-              {settings.currency.symbol}{totalOwedToMe.toFixed(2)}
+              {formatCurrency(totalOwedToMe)}
             </p>
           </Card>
           <Card className="p-4">
             <p className="text-sm text-muted-foreground">I Owe</p>
             <p className="text-2xl font-bold text-expense">
-              {settings.currency.symbol}{totalIOwe.toFixed(2)}
+              {formatCurrency(totalIOwe)}
             </p>
           </Card>
         </div>
@@ -141,7 +141,7 @@ function DebtCard({ debt, onEdit }: { debt: Debt; onEdit: (d: Debt) => void }) {
         </div>
         <div className="text-right">
           <p className={`text-xl font-bold ${debt.type === 'owed-to-me' ? 'text-income' : 'text-expense'}`}>
-            {settings.currency.symbol}{debt.amount.toFixed(2)}
+            {formatCurrency(debt.amount)}
           </p>
         </div>
       </div>
