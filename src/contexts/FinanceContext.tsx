@@ -10,7 +10,6 @@ import {
   loadRecurring, saveRecurring,
   loadSavingsGoals, saveSavingsGoals,
   loadDebts, saveDebts,
-  migrateFromLocalStorage,
 } from '@/lib/storage';
 
 interface FinanceContextType {
@@ -99,8 +98,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
 
     async function loadData() {
       try {
-        await migrateFromLocalStorage();
-
         if (!mounted) return;
         
         const [
