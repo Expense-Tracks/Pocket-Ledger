@@ -10,6 +10,7 @@ import {
   loadRecurring, saveRecurring,
   loadSavingsGoals, saveSavingsGoals,
   loadDebts, saveDebts,
+  migrateFromLocalStorage,
 } from '@/lib/storage';
 
 interface FinanceContextType {
@@ -20,6 +21,7 @@ interface FinanceContextType {
   recurringTransactions: RecurringTransaction[];
   savingsGoals: SavingsGoal[];
   debts: Debt[];
+  isLoading: boolean;
   addTransaction: (t: Omit<Transaction, 'id' | 'createdAt'>) => string;
   updateTransaction: (id: string, t: Partial<Transaction>) => void;
   deleteTransaction: (id: string) => void;
@@ -83,48 +85,92 @@ function getNextDate(from: string, frequency: RecurringTransaction['frequency'])
 }
 
 export function FinanceProvider({ children }: { children: React.ReactNode }) {
-  const [transactions, setTransactions] = useState<Transaction[]>(() => loadTransactions());
-  const [categories, setCategories] = useState<Category[]>(() => loadCategories());
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>(() => loadPaymentMethods());
-  const [budgets, setBudgets] = useState<Budget[]>(() => loadBudgets());
-  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>(() => loadRecurring());
-  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>(() => loadSavingsGoals());
-  const [debts, setDebts] = useState<Debt[]>(() => loadDebts());
-  const [hydrated] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [budgets, setBudgets] = useState<Budget[]>([]);
+  const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>([]);
+  const [debts, setDebts] = useState<Debt[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Persist state changes to localStorage
-  useEffect(() => { saveTransactions(transactions); }, [transactions]);
-  useEffect(() => { saveCategories(categories); }, [categories]);
-  useEffect(() => { savePaymentMethods(paymentMethods); }, [paymentMethods]);
-  useEffect(() => { saveBudgets(budgets); }, [budgets]);
-  useEffect(() => { saveRecurring(recurringTransactions); }, [recurringTransactions]);
-  useEffect(() => { saveSavingsGoals(savingsGoals); }, [savingsGoals]);
-  useEffect(() => { saveDebts(debts); }, [debts]);
-
-  // Auto-generate transactions from active recurring rules
   useEffect(() => {
-    if (!hydrated) return;
+    let mounted = true;
+
+    async function loadData() {
+      try {
+        await migrateFromLocalStorage();
+
+        if (!mounted) return;
+        
+        const [
+          loadedTransactions,
+          loadedCategories,
+          loadedPaymentMethods,
+          loadedBudgets,
+          loadedRecurring,
+          loadedSavingsGoals,
+          loadedDebts,
+        ] = await Promise.all([
+          loadTransactions(),
+          loadCategories(),
+          loadPaymentMethods(),
+          loadBudgets(),
+          loadRecurring(),
+          loadSavingsGoals(),
+          loadDebts(),
+        ]);
+
+        if (!mounted) return;
+
+        setTransactions(loadedTransactions);
+        setCategories(loadedCategories);
+        setPaymentMethods(loadedPaymentMethods);
+        setBudgets(loadedBudgets);
+        setRecurringTransactions(loadedRecurring);
+        setSavingsGoals(loadedSavingsGoals);
+        setDebts(loadedDebts);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadData();
+
+    return () => { mounted = false; };
+  }, []);
+
+  useEffect(() => { if (!isLoading) saveTransactions(transactions); }, [transactions, isLoading]);
+  useEffect(() => { if (!isLoading) saveCategories(categories); }, [categories, isLoading]);
+  useEffect(() => { if (!isLoading) savePaymentMethods(paymentMethods); }, [paymentMethods, isLoading]);
+  useEffect(() => { if (!isLoading) saveBudgets(budgets); }, [budgets, isLoading]);
+  useEffect(() => { if (!isLoading) saveRecurring(recurringTransactions); }, [recurringTransactions, isLoading]);
+  useEffect(() => { if (!isLoading) saveSavingsGoals(savingsGoals); }, [savingsGoals, isLoading]);
+  useEffect(() => { if (!isLoading) saveDebts(debts); }, [debts, isLoading]);
+
+  useEffect(() => {
+    if (isLoading) return;
     
     const now = new Date();
-    now.setHours(23, 59, 59, 999); // End of today for comparison
+    now.setHours(23, 59, 59, 999);
     const generated: Transaction[] = [];
-    // Track which recurring IDs need lastGenerated updates
     const updates = new Map<string, { lastGenerated: string; active?: boolean }>();
     
     recurringTransactions.forEach(r => {
       if (!r.active) return;
       
-      // Deactivate if past end date
       if (r.endDate && new Date(r.endDate) < now) {
         updates.set(r.id, { lastGenerated: r.lastGenerated || r.startDate, active: false });
         return;
       }
       
-      // Determine where to start generating from
       let newLastGenerated = r.lastGenerated || r.startDate;
       let didGenerate = false;
       
-      // If this is the first generation and start date is today or earlier
       if (!r.lastGenerated) {
         const startDate = new Date(r.startDate);
         if (startDate <= now) {
@@ -143,7 +189,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         }
       }
       
-      // Generate all subsequent transactions up to today
       let nextDate = getNextDate(newLastGenerated, r.frequency);
       while (nextDate <= now) {
         if (r.endDate && nextDate > new Date(r.endDate)) break;
@@ -168,7 +213,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       }
     });
     
-    // Apply updates using functional state setters to avoid overwriting concurrent changes
     if (updates.size > 0 || generated.length > 0) {
       if (generated.length > 0) {
         setTransactions(prev => [...generated, ...prev]);
@@ -182,9 +226,8 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         );
       }
     }
-  }, [hydrated]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isLoading, recurringTransactions]);
 
-  // Compute spent per budget from transactions in the current period
   const budgetsWithSpent = useMemo(() => {
     return budgets.map(b => {
       const { start, end } = getBudgetPeriodRange(b.period);
@@ -229,7 +272,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setCategories(prev => prev.filter(c => c.id !== id || c.isDefault));
       return;
     }
-    // Track which transactions had this category so undo can restore them
     const affectedTxnIds = transactions.filter(t => t.category === id).map(t => t.id);
     setCategories(prev => prev.filter(c => c.id !== id || c.isDefault));
     setTransactions(prev => prev.map(t => t.category === id ? { ...t, category: 'uncategorized' } : t));
@@ -254,7 +296,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       setPaymentMethods(prev => prev.filter(p => p.id !== id || p.isDefault));
       return;
     }
-    // Track which transactions had this payment method so undo can restore them
     const affectedTxnIds = transactions.filter(t => t.paymentMethod === id).map(t => t.id);
     setPaymentMethods(prev => prev.filter(p => p.id !== id || p.isDefault));
     setTransactions(prev => prev.map(t => t.paymentMethod === id ? { ...t, paymentMethod: 'other' } : t));
@@ -293,13 +334,10 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     now.setHours(23, 59, 59, 999);
     const startDate = new Date(r.startDate);
 
-    // If start date is today or earlier, immediately generate the first transaction
-    // and set lastGenerated so the hydration effect won't duplicate it
     if (r.active && startDate <= now) {
       const generated: Transaction[] = [];
       let lastGen = r.startDate;
 
-      // First transaction on start date
       generated.push({
         id: crypto.randomUUID(),
         amount: r.amount,
@@ -311,7 +349,6 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
       });
 
-      // Catch up any subsequent occurrences up to today
       let nextDate = getNextDate(lastGen, r.frequency);
       while (nextDate <= now) {
         if (r.endDate && nextDate > new Date(r.endDate)) break;
@@ -422,9 +459,30 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     return { income, expense, net: income - expense };
   }, [transactions]);
 
+  if (isLoading) {
+    return (
+      <FinanceContext.Provider value={{
+        transactions: [], categories: [], paymentMethods: [], budgets: [],
+        recurringTransactions: [], savingsGoals: [], debts: [], isLoading: true,
+        budgetsWithSpent: [],
+        addTransaction: () => '', updateTransaction: () => {}, deleteTransaction: () => {},
+        addCategory: () => {}, deleteCategory: () => {},
+        addPaymentMethod: () => {}, deletePaymentMethod: () => {},
+        addBudget: () => {}, updateBudget: () => {}, deleteBudget: () => {},
+        addRecurring: () => {}, updateRecurring: () => {}, deleteRecurring: () => {},
+        addSavingsGoal: () => {}, updateSavingsGoal: () => {}, deleteSavingsGoal: () => {},
+        contributeSavingsGoal: () => {},
+        addDebt: () => '', updateDebt: () => {}, deleteDebt: () => {},
+        importData: () => {}, getBalance: () => ({ income: 0, expense: 0, net: 0 }),
+      }}>
+        {children}
+      </FinanceContext.Provider>
+    );
+  }
+
   return (
     <FinanceContext.Provider value={{
-      transactions, categories, paymentMethods, budgets, recurringTransactions, savingsGoals, debts,
+      transactions, categories, paymentMethods, budgets, recurringTransactions, savingsGoals, debts, isLoading,
       budgetsWithSpent,
       addTransaction, updateTransaction, deleteTransaction,
       addCategory, deleteCategory,
