@@ -95,7 +95,7 @@ export default function Debts() {
 }
 
 function DebtCard({ debt, onEdit }: { debt: Debt; onEdit: (d: Debt) => void }) {
-  const { settings } = useSettings();
+  const { settings, formatCurrency } = useSettings();
   const isOverdue = debt.dueDate && new Date(debt.dueDate) < new Date() && debt.status === 'pending';
 
   return (
