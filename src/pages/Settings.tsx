@@ -48,13 +48,16 @@ import {
   Database,
   EyeOff,
   Eye,
+  Fingerprint,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExportData } from '@/contexts/FinanceContext';
+import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 
 export default function Settings() {
   const { settings, updateSettings, formatCurrency, resetSettings } = useSettings();
   const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, savingsGoals, debts, importData } = useFinance();
+  const { isSupported: biometricSupported, isLoading: biometricLoading, registerBiometric, disableBiometric } = useBiometricAuth(settings.biometricEnabled);
 
   const [newCategory, setNewCategory] = useState<{ name: string; icon: string; type: 'income' | 'expense' }>({ name: '', icon: '📁', type: 'expense' });
   const [newPayment, setNewPayment] = useState({ name: '', icon: '💳' });
@@ -264,6 +267,41 @@ export default function Settings() {
                 onCheckedChange={(checked) => updateSettings({ hideAmounts: checked })}
               />
             </div>
+            <div className="flex items-center justify-between pt-2 border-t">
+                <div className="flex items-center gap-3">
+                  <Fingerprint className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="biometric" className="cursor-pointer">Biometric Lock</Label>
+                    <p className="text-xs text-muted-foreground">
+                      {biometricLoading 
+                        ? 'Checking...' 
+                        : biometricSupported 
+                          ? 'Use Face ID or fingerprint to unlock' 
+                          : 'Not available on this device'}
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="biometric"
+                  disabled={!biometricSupported || biometricLoading}
+                  checked={settings.biometricEnabled}
+                  onCheckedChange={async (checked) => {
+                    if (checked) {
+                      const success = await registerBiometric();
+                      if (success) {
+                        updateSettings({ biometricEnabled: true });
+                        toast.success('Biometric lock enabled', { duration: 1000 });
+                      } else {
+                        toast.error('Failed to enable biometric lock');
+                      }
+                    } else {
+                      disableBiometric();
+                      updateSettings({ biometricEnabled: false });
+                      toast.success('Biometric lock disabled', { duration: 1000 });
+                    }
+                  }}
+                />
+              </div>
           </div>
         </section>
 

@@ -6,6 +6,7 @@ export interface AppSettings {
   defaultTransactionType: 'income' | 'expense';
   notifications: boolean;
   hideAmounts: boolean;
+  biometricEnabled: boolean;
 }
 
 export interface CurrencyOption {
@@ -41,4 +42,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultTransactionType: 'expense',
   notifications: true,
   hideAmounts: false,
+  biometricEnabled: false,
 };

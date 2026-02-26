@@ -1,10 +1,12 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FinanceProvider } from "@/contexts/FinanceContext";
-import { SettingsProvider } from "@/contexts/SettingsContext";
+import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
 import { BottomNav } from "@/components/BottomNav";
 import { useSwUpdate } from "@/hooks/use-sw-update";
 import { useTitle } from "@/hooks/use-title";
+import { useBiometricAuth } from "@/hooks/use-biometric-auth";
+import { LockScreen } from "@/components/LockScreen";
 
 import Dashboard from "./pages/Dashboard";
 
@@ -24,6 +26,23 @@ const AddTransactionDialog = lazy(() =>
 const ToastProviders = lazy(() =>
   import("./components/ToastProviders").then(m => ({ default: m.ToastProviders }))
 );
+
+const BiometricGuard = ({ children }: { children: React.ReactNode }) => {
+  const { settings } = useSettings();
+  const { isLocked, isSupported, isLoading, unlock } = useBiometricAuth(settings.biometricEnabled);
+
+  return (
+    <>
+      <LockScreen
+        isLocked={isLocked}
+        onUnlock={unlock}
+        isSupported={isSupported}
+        isLoading={isLoading}
+      />
+      {children}
+    </>
+  );
+};
 
 const AppRoutes = () => {
   useTitle();
@@ -57,11 +76,13 @@ const App = () => {
 
   return (
     <SettingsProvider>
-      <FinanceProvider>
-        <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-          <AppRoutes />
-        </BrowserRouter>
-      </FinanceProvider>
+      <BiometricGuard>
+        <FinanceProvider>
+          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+            <AppRoutes />
+          </BrowserRouter>
+        </FinanceProvider>
+      </BiometricGuard>
     </SettingsProvider>
   );
 };
