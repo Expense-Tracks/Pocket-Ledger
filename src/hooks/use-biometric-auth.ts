@@ -44,15 +44,18 @@ export function useBiometricAuth(enabled: boolean) {
 
   const registerBiometric = useCallback(async (): Promise<boolean> => {
     try {
+      const userId = new Uint8Array(16);
+      crypto.getRandomValues(userId);
+      
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
 
       const credential = await navigator.credentials.create({
         publicKey: {
           challenge,
-          rp: { name: 'Pocket Ledger' },
+          rp: { id: window.location.hostname, name: 'Pocket Ledger' },
           user: {
-            id: new Uint8Array(16),
+            id: userId,
             name: 'Pocket Ledger User',
             displayName: 'User',
           },
@@ -61,16 +64,19 @@ export function useBiometricAuth(enabled: boolean) {
             { type: 'public-key', alg: -257 },
           ],
           authenticatorSelection: {
-            userVerification: 'required',
-            residentKey: 'required',
+            userVerification: 'preferred',
+            residentKey: 'preferred',
             authenticatorAttachment: 'platform',
           },
+          timeout: 60000,
         },
       });
 
       if (credential) {
         const cred = credential as PublicKeyCredential;
-        localStorage.setItem(CREDENTIAL_ID_KEY, cred.id);
+        // Store credential ID as base64
+        const base64 = btoa(String.fromCharCode(...new Uint8Array(cred.rawId)));
+        localStorage.setItem(CREDENTIAL_ID_KEY, base64);
         return true;
       }
       return false;
@@ -90,16 +96,20 @@ export function useBiometricAuth(enabled: boolean) {
       const challenge = new Uint8Array(32);
       crypto.getRandomValues(challenge);
 
+      // Decode base64 credential ID
+      const decoded = Uint8Array.from(atob(credentialId), c => c.charCodeAt(0));
+
       const credential = await navigator.credentials.get({
         publicKey: {
           challenge,
           allowCredentials: [
             {
-              id: new TextEncoder().encode(credentialId),
+              id: decoded,
               type: 'public-key',
             },
           ],
-          userVerification: 'required',
+          userVerification: 'preferred',
+          timeout: 60000,
         },
       });
 
