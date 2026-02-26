@@ -174,7 +174,6 @@ export function EditDebtDialog({ debt, open, onOpenChange }: EditDebtDialogProps
             </div>
 
             <div>
-              <Label>Due Date (Optional)</Label>
               <DatePicker date={dueDate} onDateChange={setDueDate} />
             </div>
 

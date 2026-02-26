@@ -34,6 +34,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import {
   DollarSign,
   Palette,
@@ -45,6 +46,8 @@ import {
   Download,
   Upload,
   Database,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ExportData } from '@/contexts/FinanceContext';
@@ -215,7 +218,7 @@ export default function Settings() {
               </SelectContent>
             </Select>
             <p className="mt-2 text-sm text-muted-foreground">
-              Preview: {formatCurrency(1234.56)}
+              Preview: {formatCurrency(1234.56, true)}
             </p>
           </div>
         </section>
@@ -226,21 +229,41 @@ export default function Settings() {
             <Palette className="h-5 w-5 text-primary" />
             <h2 className="text-lg font-semibold">Appearance</h2>
           </div>
-          <div className="rounded-xl bg-card p-4">
-            <Label htmlFor="theme">Theme</Label>
-            <Select
-              value={settings.theme}
-              onValueChange={(theme: 'light' | 'dark' | 'system') => updateSettings({ theme })}
-            >
-              <SelectTrigger id="theme" className="mt-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="rounded-xl bg-card p-4 space-y-4">
+            <div>
+              <Label htmlFor="theme">Theme</Label>
+              <Select
+                value={settings.theme}
+                onValueChange={(theme: 'light' | 'dark' | 'system') => updateSettings({ theme })}
+              >
+                <SelectTrigger id="theme" className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-3">
+                {settings.hideAmounts ? (
+                  <EyeOff className="h-5 w-5 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-5 w-5 text-muted-foreground" />
+                )}
+                <div>
+                  <Label htmlFor="hide-amounts" className="cursor-pointer">Hide Amounts</Label>
+                  <p className="text-xs text-muted-foreground">Mask all monetary values</p>
+                </div>
+              </div>
+              <Switch
+                id="hide-amounts"
+                checked={settings.hideAmounts}
+                onCheckedChange={(checked) => updateSettings({ hideAmounts: checked })}
+              />
+            </div>
           </div>
         </section>
 

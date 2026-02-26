@@ -5,6 +5,7 @@ export interface AppSettings {
   dateFormat: 'MM/dd/yyyy' | 'dd/MM/yyyy' | 'yyyy-MM-dd';
   defaultTransactionType: 'income' | 'expense';
   notifications: boolean;
+  hideAmounts: boolean;
 }
 
 export interface CurrencyOption {
@@ -39,4 +40,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateFormat: 'MM/dd/yyyy',
   defaultTransactionType: 'expense',
   notifications: true,
+  hideAmounts: false,
 };

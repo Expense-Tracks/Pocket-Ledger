@@ -4,7 +4,7 @@ import { AppSettings, DEFAULT_SETTINGS, CurrencyOption } from '@/types/settings'
 interface SettingsContextType {
   settings: AppSettings;
   updateSettings: (updates: Partial<AppSettings>) => void;
-  formatCurrency: (amount: number) => string;
+  formatCurrency: (amount: number, forceShow?: boolean) => string;
   resetSettings: () => void;
 }
 
@@ -68,7 +68,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     setSettings(prev => ({ ...prev, ...updates }));
   };
 
-  const formatCurrency = (amount: number): string => {
+  const formatCurrency = (amount: number, forceShow = false): string => {
+    if (settings.hideAmounts && !forceShow) {
+      return '****';
+    }
     const { symbol, position } = settings.currency;
     const formatted = amount.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return position === 'before' ? `${symbol}${formatted}` : `${formatted}${symbol}`;
