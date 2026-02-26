@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/DatePicker';
+import { AmountInput } from '@/components/AmountInput';
 
 interface Props {
   transaction: Transaction | null;
@@ -91,14 +92,11 @@ export function EditTransactionDialog({ transaction, open, onOpenChange }: Props
 
           <div>
             <Label htmlFor="edit-amount">Amount</Label>
-            <Input
-              id="edit-amount"
-              type="text"
-              placeholder="0.00"
+            <AmountInput
               value={amount}
-              onChange={e => setAmount(e.target.value)}
-              className="mt-1 text-2xl font-bold"
-              inputMode="decimal"
+              onChange={setAmount}
+              className="mt-1"
+              placeholder="0.00"
             />
           </div>
 

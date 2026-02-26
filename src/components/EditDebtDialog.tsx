@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/DatePicker';
+import { AmountInput } from '@/components/AmountInput';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,12 +140,10 @@ export function EditDebtDialog({ debt, open, onOpenChange }: EditDebtDialogProps
 
             <div>
               <Label htmlFor="amount">Amount</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
+              <AmountInput
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={setAmount}
+                placeholder="0.00"
               />
             </div>
 

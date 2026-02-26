@@ -4,9 +4,9 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AmountInput } from '@/components/AmountInput';
 import { Plus, Trash2 } from 'lucide-react';
 
 export default function Budgets() {
@@ -65,7 +65,7 @@ export default function Budgets() {
                 </div>
                 <div>
                   <Label>Budget Amount</Label>
-                  <Input type="text" value={amount} onChange={e => setAmount(e.target.value)} className="mt-1" inputMode="decimal" placeholder="0.00" />
+                  <AmountInput value={amount} onChange={setAmount} className="mt-1" placeholder="0.00" />
                 </div>
                 <div>
                   <Label>Period</Label>

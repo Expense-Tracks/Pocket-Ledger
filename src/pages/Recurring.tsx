@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { DatePicker } from '@/components/DatePicker';
+import { AmountInput } from '@/components/AmountInput';
 import { Plus, Trash2, Pause, Play } from 'lucide-react';
 
 const FREQUENCY_LABELS: Record<RecurringTransaction['frequency'], string> = {
@@ -115,14 +116,11 @@ export default function Recurring() {
 
                 <div>
                   <Label htmlFor="rec-amount">Amount</Label>
-                  <Input
-                    id="rec-amount"
-                    type="text"
-                    placeholder="0.00"
+                  <AmountInput
                     value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="mt-1 text-2xl font-bold"
-                    inputMode="decimal"
+                    onChange={setAmount}
+                    className="mt-1"
+                    placeholder="0.00"
                   />
                 </div>
 
