@@ -29,7 +29,7 @@ export function LockScreen({ isLocked, onUnlock, isSupported, isLoading }: LockS
   if (!isLocked || isLoading) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background p-6">
+    <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background p-6">
       <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 mb-6">
         <Lock className="h-10 w-10 text-primary" />
       </div>
