@@ -47,7 +47,7 @@ export function AddInvestmentDialog() {
       } else {
         setStockSearchResults([]);
       }
-    }, 300);
+    }, 1000);
     return () => clearTimeout(delayDebounceFn);
   }, [stockSearchQuery, type]);
 
@@ -61,7 +61,7 @@ export function AddInvestmentDialog() {
       } else {
         setCryptoSearchResults([]);
       }
-    }, 300);
+    }, 500);
     return () => clearTimeout(delayDebounceFn);
   }, [cryptoSearchQuery, type]);
 
