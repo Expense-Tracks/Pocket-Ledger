@@ -4,27 +4,24 @@ export interface FMPStockSearchResult {
   symbol: string;
   name: string;
   currency: string;
-  stockExchange: string;
+  exchange: string;
 }
 
 export async function searchFMPStocks(query: string): Promise<FMPStockSearchResult[]> {
   if (!FMP_API_KEY) {
-    console.warn('FMP_API_KEY not configured');
     return [];
   }
   if (!query) {
     return [];
   }
   try {
-    const response = await fetch(`https://financialmodelingprep.com/api/v3/search?query=${query}&limit=10&exchange=NASDAQ,NYSE,AMEX,IDX&apikey=${FMP_API_KEY}`);
-    
+    const response = await fetch(`https://financialmodelingprep.com/stable/search-symbol?query=${query}&limit=10&apikey=${FMP_API_KEY}`);
     if (!response.ok) {
-      console.warn(`FMP API error: ${response.status}`);
       return [];
     }
     
     const data: FMPStockSearchResult[] = await response.json();
-    return data.filter(item => ['NASDAQ', 'NYSE', 'AMEX', 'IDX'].includes(item.stockExchange));
+    return data.filter(item => ['NASDAQ', 'NYSE', 'AMEX', 'JKT'].includes(item.exchange));
   } catch (error) {
     return [];
   }
@@ -35,6 +32,18 @@ export interface CoinGeckoCryptoSearchResult {
   name: string;
   symbol: string;
   market_cap_rank: number | null;
+  thumb?: string;
+}
+
+interface CoinGeckoCoinDetails {
+  id: string;
+  symbol: string;
+  name: string;
+  image: {
+    thumb: string;
+    small: string;
+    large: string;
+  };
 }
 
 export async function searchCoinGeckoCryptos(query: string): Promise<CoinGeckoCryptoSearchResult[]> {
@@ -44,10 +53,26 @@ export async function searchCoinGeckoCryptos(query: string): Promise<CoinGeckoCr
   try {
     const response = await fetch(`https://api.coingecko.com/api/v3/search?query=${query}`);
     const data: { coins: CoinGeckoCryptoSearchResult[] } = await response.json();
-    // CoinGecko's search API returns a 'coins' array
     return data.coins || [];
   } catch (error) {
-
     return [];
   }
 }
+
+export function getStockLogoUrl(symbol: string): string {
+  return `https://financialmodelingprep.com/image-stock/${symbol}.png`;
+}
+
+export async function fetchCryptoLogoUrl(cryptoId: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(`https://api.coingecko.com/api/v3/coins/${cryptoId}`);
+    if (!response.ok) {
+      return undefined;
+    }
+    const data: CoinGeckoCoinDetails = await response.json();
+    return data.image?.small || data.image?.thumb;
+  } catch (error) {
+    return undefined;
+  }
+}
+

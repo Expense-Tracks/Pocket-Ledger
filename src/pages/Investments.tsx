@@ -8,8 +8,14 @@ export default function Investments() {
   const { investments, deleteInvestment } = useFinance();
   const { formatCurrency } = useSettings();
 
-  const totalValue = investments.reduce((acc, i) => acc + i.currentPrice * i.quantity, 0);
-  const totalCost = investments.reduce((acc, i) => acc + i.purchasePrice * i.quantity, 0);
+  const totalValue = investments.reduce((acc, i) => {
+    const multiplier = i.type === 'stock' && i.exchange === 'JKT' ? 100 : 1;
+    return acc + i.currentPrice * i.quantity * multiplier;
+  }, 0);
+  const totalCost = investments.reduce((acc, i) => {
+    const multiplier = i.type === 'stock' && i.exchange === 'JKT' ? 100 : 1;
+    return acc + i.purchasePrice * i.quantity * multiplier;
+  }, 0);
   const totalGain = totalValue - totalCost;
 
   return (
@@ -49,13 +55,20 @@ export default function Investments() {
             {investments.map(investment => {
               const gain = investment.currentPrice - investment.purchasePrice;
               const gainPct = investment.purchasePrice > 0 ? (gain / investment.purchasePrice) * 100 : 0;
+              const multiplier = investment.type === 'stock' && investment.exchange === 'JKT' ? 100 : 1;
               return (
                 <div key={investment.id} className="rounded-2xl bg-card p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="text-xl shrink-0">
-                        {investment.type === 'stock' ? '📈' : investment.type === 'crypto' ? '💎' : investment.type === 'gold' ? '🥇' : '📊'}
-                      </span>
+                      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
+                        {investment.logoUrl ? (
+                          <img src={investment.logoUrl} alt={`${investment.name} logo`} className="w-full h-full object-contain rounded-full" />
+                        ) : (
+                          <span className="text-xl">
+                            {investment.type === 'stock' ? '📈' : investment.type === 'crypto' ? '💎' : investment.type === 'gold' ? '🥇' : '📊'}
+                          </span>
+                        )}
+                      </div>
                       <div className="min-w-0">
                         <p className="font-semibold truncate">{investment.name}</p>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -67,7 +80,7 @@ export default function Investments() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="text-right">
-                        <p className="font-bold">{formatCurrency(investment.currentPrice * investment.quantity)}</p>
+                        <p className="font-bold">{formatCurrency(investment.currentPrice * investment.quantity * multiplier)}</p>
                         <p className={`text-xs ${gain >= 0 ? 'text-income' : 'text-expense'}`}>
                           {gain >= 0 ? <TrendingUp className="h-3 w-3 inline" /> : <TrendingDown className="h-3 w-3 inline" />}
                           {' '}{gain >= 0 ? '+' : ''}{gainPct.toFixed(1)}%

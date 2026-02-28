@@ -66,15 +66,16 @@ export async function fetchStockPrice(symbol: string, currencyCode: string): Pro
     return null;
   }
   try {
-    const response = await fetch(`https://financialmodelingprep.com/api/v3/quote-short/${symbol}?apikey=${FMP_API_KEY}`);
+    const response = await fetch(`https://financialmodelingprep.com/stable/profile?symbol=${symbol}&apikey=${FMP_API_KEY}`);
     const data = await response.json();
     if (data && data.length > 0) {
-      const usdPrice = data[0].price;
-      if (currencyCode.toUpperCase() === 'USD') {
-        return usdPrice;
+      const basePrice = data[0].price;
+      const currency = data[0].currency;
+      if (currencyCode.toUpperCase() === currency) {
+        return basePrice;
       } else {
         const rate = await fetchExchangeRate(currencyCode);
-        return usdPrice * rate;
+        return basePrice * rate;
       }
     }
     return null;

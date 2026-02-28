@@ -84,8 +84,10 @@ export interface Investment {
   purchasePrice: number;
   currentPrice: number;
   purchaseDate: string; // ISO string
+  logoUrl?: string;
   history: PriceHistory[];
   lastUpdated?: string; // ISO string - when currentPrice was last fetched
+  exchange?: string; // Optional: for stocks, to store the exchange (e.g., JKT)
 }
 
 export interface PriceHistory {

@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { searchFMPStocks, searchCoinGeckoCryptos, FMPStockSearchResult, CoinGeckoCryptoSearchResult } from '@/lib/search-api';
+import { searchFMPStocks, searchCoinGeckoCryptos, getStockLogoUrl, fetchCryptoLogoUrl, FMPStockSearchResult, CoinGeckoCryptoSearchResult } from '@/lib/search-api';
 
 export function AddInvestmentDialog() {
   const { addInvestment } = useFinance();
@@ -24,6 +24,8 @@ export function AddInvestmentDialog() {
   const [quantity, setQuantity] = useState('');
   const [purchasePrice, setPurchasePrice] = useState('');
   const [purchaseDate, setPurchaseDate] = useState<Date>(new Date());
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
+  const [exchange, setExchange] = useState<string | undefined>(undefined);
 
   const [stockSearchQuery, setStockSearchQuery] = useState('');
   const [stockSearchResults, setStockSearchResults] = useState<FMPStockSearchResult[]>([]);
@@ -63,7 +65,7 @@ export function AddInvestmentDialog() {
     return () => clearTimeout(delayDebounceFn);
   }, [cryptoSearchQuery, type]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsedQuantity = parseFloat(quantity);
     const parsedPurchasePrice = parseFloat(purchasePrice);
@@ -113,6 +115,8 @@ export function AddInvestmentDialog() {
       quantity: parsedQuantity,
       purchasePrice: parsedPurchasePrice,
       purchaseDate: purchaseDate.toISOString(),
+      logoUrl,
+      exchange, // Include exchange in addInvestment call
     });
     setOpen(false);
     resetForm();
@@ -125,6 +129,8 @@ export function AddInvestmentDialog() {
     setQuantity('');
     setPurchasePrice('');
     setPurchaseDate(new Date());
+    setLogoUrl(undefined);
+    setExchange(undefined); // Reset exchange
     setStockSearchQuery('');
     setCryptoSearchQuery('');
     setStockSearchResults([]);
@@ -149,6 +155,8 @@ export function AddInvestmentDialog() {
               setType(value as InvestmentType);
               setName('');
               setSymbol('');
+              setLogoUrl(undefined);
+              setExchange(undefined); // Reset exchange when type changes
               setStockSearchQuery('');
               setCryptoSearchQuery('');
               setStockSearchResults([]);
@@ -202,6 +210,8 @@ export function AddInvestmentDialog() {
                               onSelect={() => {
                                 setName(item.name);
                                 setSymbol(item.symbol);
+                                setLogoUrl(getStockLogoUrl(item.symbol));
+                                setExchange(item.exchange); // Set exchange
                                 setIsStockPopoverOpen(false);
                               }}
                             >
@@ -256,9 +266,11 @@ export function AddInvestmentDialog() {
                             <CommandItem
                               key={item.id}
                               value={item.name}
-                              onSelect={() => {
+                              onSelect={async () => {
                                 setName(item.name);
                                 setSymbol(item.id);
+                                const logo = await fetchCryptoLogoUrl(item.id);
+                                setLogoUrl(logo); 
                                 setIsCryptoPopoverOpen(false);
                               }}
                             >
