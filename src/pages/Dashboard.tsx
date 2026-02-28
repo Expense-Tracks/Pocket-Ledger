@@ -1,7 +1,8 @@
 import { useFinance } from '@/contexts/FinanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { TransactionList } from '@/components/TransactionList';
-import { TrendingUp, TrendingDown, Wallet, PiggyBank } from 'lucide-react';
+import DynamicFontSizeText from '@/components/DynamicFontSizeText';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function Dashboard() {
   const { transactions, getBalance } = useFinance();
@@ -17,9 +18,11 @@ export default function Dashboard() {
         {/* Header */}
         <div className="mb-6">
           <p className="text-sm text-muted-foreground">Total Balance</p>
-          <h1 className="text-4xl font-bold tracking-tight">
-            {formatCurrency(net)}
-          </h1>
+          <DynamicFontSizeText
+            text={formatCurrency(net)}
+            initialFontSizeClass="text-3xl"
+            className="mt-1 font-bold tracking-tight"
+          />
         </div>
 
         {/* Stats */}
@@ -29,14 +32,22 @@ export default function Dashboard() {
               <TrendingUp className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Income</span>
             </div>
-            <p className="mt-1 text-xl font-bold text-income truncate">{formatCurrency(income)}</p>
+            <DynamicFontSizeText
+              text={formatCurrency(income)}
+              initialFontSizeClass="text-xl"
+              className="mt-1 font-bold text-income"
+            />
           </div>
           <div className="stat-card rounded-2xl bg-expense/10">
             <div className="flex items-center gap-2 text-expense">
               <TrendingDown className="h-4 w-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Expenses</span>
             </div>
-            <p className="mt-1 text-xl font-bold text-expense truncate">{formatCurrency(expense)}</p>
+            <DynamicFontSizeText
+              text={formatCurrency(expense)}
+              initialFontSizeClass="text-xl"
+              className="mt-1 font-bold text-expense"
+            />
           </div>
         </div>
 

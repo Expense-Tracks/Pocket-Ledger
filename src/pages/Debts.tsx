@@ -8,18 +8,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AddDebtDialog } from '@/components/AddDebtDialog';
 import { EditDebtDialog } from '@/components/EditDebtDialog';
+import DynamicFontSizeText from '@/components/DynamicFontSizeText';
 
 export default function Debts() {
   const { debts } = useFinance();
   const { formatCurrency } = useSettings();
   const [addOpen, setAddOpen] = useState(false);
   const [editDebt, setEditDebt] = useState<Debt | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'owed-to-me' | 'i-owe'>('all');
 
   const owedToMe = debts.filter(d => d.type === 'owed-to-me');
   const iOwe = debts.filter(d => d.type === 'i-owe');
 
   const totalOwedToMe = owedToMe.filter(d => d.status === 'pending').reduce((s, d) => s + d.amount, 0);
   const totalIOwe = iOwe.filter(d => d.status === 'pending').reduce((s, d) => s + d.amount, 0);
+
+  const filteredDebts = debts.filter(debt => {
+    if (filterType === 'all') return true;
+    return debt.type === filterType;
+  });
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -34,51 +41,55 @@ export default function Debts() {
         <div className="mb-6 grid grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card p-4">
             <p className="text-sm text-muted-foreground">Owed to Me</p>
-            <p className="text-2xl font-bold text-income">
-              {formatCurrency(totalOwedToMe)}
-            </p>
+            <DynamicFontSizeText
+              text={formatCurrency(totalOwedToMe)}
+              initialFontSizeClass="text-xl"
+              className="mt-1 font-bold text-income"
+            />
           </div>
           <div className="rounded-2xl bg-card p-4">
             <p className="text-sm text-muted-foreground">I Owe</p>
-            <p className="text-2xl font-bold text-expense">
-              {formatCurrency(totalIOwe)}
-            </p>
-          </div>
-        </div>
+            <DynamicFontSizeText
+              text={formatCurrency(totalIOwe)}
+              initialFontSizeClass="text-xl"
+              className="mt-1 font-bold text-expense"
+            />
+          </div >
+        </div >
 
         <div className="mb-4 flex gap-2 rounded-xl bg-secondary p-1">
           <button
             type="button"
-            onClick={() => {}}
-            className="flex-1 rounded-lg py-2 text-sm font-semibold bg-card shadow-sm"
+            onClick={() => setFilterType('all')}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${filterType === 'all' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
           >
             All ({debts.length})
           </button>
           <button
             type="button"
-            onClick={() => {}}
-            className="flex-1 rounded-lg py-2 text-sm font-semibold text-muted-foreground"
+            onClick={() => setFilterType('owed-to-me')}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${filterType === 'owed-to-me' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
           >
             Owed to Me ({owedToMe.length})
           </button>
           <button
             type="button"
-            onClick={() => {}}
-            className="flex-1 rounded-lg py-2 text-sm font-semibold text-muted-foreground"
+            onClick={() => setFilterType('i-owe')}
+            className={`flex-1 rounded-lg py-2 text-sm font-semibold ${filterType === 'i-owe' ? 'bg-card shadow-sm' : 'text-muted-foreground'}`}
           >
             I Owe ({iOwe.length})
           </button>
-        </div>
+        </div >
 
-        {debts.length === 0 ? (
+        {filteredDebts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <HandCoins className="mb-3 h-12 w-12 opacity-50" />
             <p className="text-lg font-medium">No debts tracked yet</p>
             <p className="text-sm">Track money you owe or are owed</p>
-          </div>
+          </div >
         ) : (
           <div className="space-y-3">
-            {debts.map(debt => (
+            {filteredDebts.map(debt => (
               <div key={debt.id} className="rounded-2xl bg-card p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -88,7 +99,7 @@ export default function Debts() {
                       <Badge variant={debt.type === 'owed-to-me' ? 'default' : 'secondary'}>
                         {debt.type === 'owed-to-me' ? 'Owed to Me' : 'I Owe'}
                       </Badge>
-                    </div>
+                    </div >
                     {debt.description && (
                       <p className="text-sm text-muted-foreground mb-2">{debt.description}</p>
                     )}
@@ -97,7 +108,7 @@ export default function Debts() {
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           <span>{format(new Date(debt.dueDate), 'MMM d, yyyy')}</span>
-                        </div>
+                        </div >
                       )}
                       <div className="flex items-center gap-1">
                         {debt.status === 'paid' ? (
@@ -111,23 +122,23 @@ export default function Debts() {
                             <span>Pending</span>
                           </>
                         )}
-                      </div>
-                    </div>
-                  </div>
+                      </div >
+                    </div >
+                  </div >
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <p className={`text-xl font-bold ${debt.type === 'owed-to-me' ? 'text-income' : 'text-expense'}`}>
                         {formatCurrency(debt.amount)}
                       </p>
-                    </div>
+                    </div >
                     <button onClick={() => setEditDebt(debt)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
                       <Trash2 className="h-4 w-4" />
                     </button>
-                  </div>
-                </div>
-              </div>
+                  </div >
+                </div >
+              </div >
             ))}
-          </div>
+          </div >
         )}
       </div>
 

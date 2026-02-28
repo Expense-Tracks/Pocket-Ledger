@@ -1,7 +1,9 @@
 import { useFinance } from "@/contexts/FinanceContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { AddInvestmentDialog } from "@/components/AddInvestmentDialog";
+import DynamicFontSizeText from '@/components/DynamicFontSizeText';
 import { TrendingUp, TrendingDown, Trash2 } from "lucide-react";
+import { cn } from '@/lib/utils';
 import { format } from "date-fns";
 
 export default function Investments() {
@@ -31,14 +33,22 @@ export default function Investments() {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-muted-foreground">Total Value</p>
-                <p className="text-2xl font-bold">{formatCurrency(totalValue)}</p>
+                <DynamicFontSizeText
+                  text={formatCurrency(totalValue)}
+                  initialFontSizeClass="text-xl"
+                  className="font-bold"
+                />
               </div>
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Total Gain/Loss</p>
-                <p className={`text-2xl font-bold ${totalGain >= 0 ? 'text-income' : 'text-expense'}`}>
-                  {totalGain >= 0 ? '+' : ''}
-                  {formatCurrency(totalGain)}
-                </p>
+                <DynamicFontSizeText
+                  text={`${totalGain >= 0 ? '+' : '-'}${formatCurrency(totalGain)}`}
+                  initialFontSizeClass="text-xl"
+                  className={cn(
+                    "font-bold",
+                    totalGain >= 0 ? "text-income" : "text-expense"
+                  )}
+                />
               </div>
             </div>
           </div>
