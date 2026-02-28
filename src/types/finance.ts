@@ -75,19 +75,38 @@ export interface Debt {
 
 export type InvestmentType = 'stock' | 'crypto' | 'gold' | 'other';
 
+export interface PurchaseRecord {
+  date: string; // ISO string
+  quantity: number;
+  price: number;
+  totalCost: number;
+}
+
+export interface SaleRecord {
+  date: string; // ISO string
+  quantity: number;
+  price: number;
+  totalRevenue: number;
+  profitLoss: number;
+  transactionId?: string; // Link to the income transaction created
+}
+
 export interface Investment {
   id: string;
   name: string;
   symbol: string;
   type: InvestmentType;
   quantity: number;
-  purchasePrice: number;
+  purchasePrice: number; // Average purchase price
   currentPrice: number;
-  purchaseDate: string; // ISO string
+  purchaseDate: string; // ISO string - most recent purchase date
   logoUrl?: string;
-  history: PriceHistory[];
+  history: PriceHistory[]; // Price history for tracking market prices
+  purchases: PurchaseRecord[]; // Track individual purchases for history
+  sales?: SaleRecord[]; // Track individual sales for history
   lastUpdated?: string; // ISO string - when currentPrice was last fetched
   exchange?: string; // Optional: for stocks, to store the exchange (e.g., JKT)
+  cryptoId?: string; // Optional: for crypto, to store the CoinGecko ID (e.g., "bitcoin") for API calls
 }
 
 export interface PriceHistory {

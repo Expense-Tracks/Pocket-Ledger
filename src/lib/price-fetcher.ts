@@ -120,7 +120,9 @@ export async function updateInvestmentPrices(investments: Investment[], currency
           currentPrice = await fetchStockPrice(investment.symbol, currencyCode);
           break;
         case 'crypto':
-          currentPrice = await fetchCryptoPrice(investment.symbol, currencyCode);
+          if (investment.cryptoId) {
+            currentPrice = await fetchCryptoPrice(investment.cryptoId, currencyCode);
+          }
           break;
         case 'gold':
           currentPrice = await fetchGoldPrice(currencyCode);

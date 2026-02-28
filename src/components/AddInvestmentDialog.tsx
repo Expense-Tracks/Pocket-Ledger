@@ -26,6 +26,7 @@ export function AddInvestmentDialog() {
   const [purchaseDate, setPurchaseDate] = useState<Date>(new Date());
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [exchange, setExchange] = useState<string | undefined>(undefined);
+  const [cryptoId, setCryptoId] = useState<string | undefined>(undefined);
 
   const [stockSearchQuery, setStockSearchQuery] = useState('');
   const [stockSearchResults, setStockSearchResults] = useState<FMPStockSearchResult[]>([]);
@@ -117,6 +118,7 @@ export function AddInvestmentDialog() {
       purchaseDate: purchaseDate.toISOString(),
       logoUrl,
       exchange, // Include exchange in addInvestment call
+      cryptoId, // Include cryptoId for crypto investments
     });
     setOpen(false);
     resetForm();
@@ -131,6 +133,7 @@ export function AddInvestmentDialog() {
     setPurchaseDate(new Date());
     setLogoUrl(undefined);
     setExchange(undefined); // Reset exchange
+    setCryptoId(undefined); // Reset cryptoId
     setStockSearchQuery('');
     setCryptoSearchQuery('');
     setStockSearchResults([]);
@@ -157,6 +160,7 @@ export function AddInvestmentDialog() {
               setSymbol('');
               setLogoUrl(undefined);
               setExchange(undefined); // Reset exchange when type changes
+              setCryptoId(undefined); // Reset cryptoId when type changes
               setStockSearchQuery('');
               setCryptoSearchQuery('');
               setStockSearchResults([]);
@@ -245,7 +249,7 @@ export function AddInvestmentDialog() {
                       aria-expanded={isCryptoPopoverOpen}
                       className="w-full justify-between mt-1"
                     >
-                      {symbol ? cryptoSearchResults.find((item) => item.id === symbol)?.name || name : "Search crypto..."}
+                      {cryptoId ? cryptoSearchResults.find((item) => item.id === cryptoId)?.name || name : "Search crypto..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
@@ -268,7 +272,8 @@ export function AddInvestmentDialog() {
                               value={item.name}
                               onSelect={async () => {
                                 setName(item.name);
-                                setSymbol(item.id);
+                                setSymbol(item.symbol.toUpperCase()); // Store the actual symbol (e.g., "BTC")
+                                setCryptoId(item.id); // Store the CoinGecko ID (e.g., "bitcoin") for API calls
                                 const logo = await fetchCryptoLogoUrl(item.id);
                                 setLogoUrl(logo); 
                                 setIsCryptoPopoverOpen(false);
@@ -277,7 +282,7 @@ export function AddInvestmentDialog() {
                               <Check
                                 className={cn(
                                   "mr-2 h-4 w-4",
-                                  symbol === item.id ? "opacity-100" : "opacity-0"
+                                  cryptoId === item.id ? "opacity-100" : "opacity-0"
                                 )}
                               />
                               {item.name} ({item.symbol.toUpperCase()})

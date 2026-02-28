@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { useFinance } from "@/contexts/FinanceContext";
 import { useSettings } from "@/contexts/SettingsContext";
 import { AddInvestmentDialog } from "@/components/AddInvestmentDialog";
+import { InvestmentDetailDialog } from "@/components/InvestmentDetailDialog";
+import { Investment } from "@/types/finance";
 import DynamicFontSizeText from '@/components/DynamicFontSizeText';
-import { TrendingUp, TrendingDown, Trash2 } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { format } from "date-fns";
 
 export default function Investments() {
-  const { investments, deleteInvestment } = useFinance();
+  const { investments } = useFinance();
   const { formatCurrency } = useSettings();
+  const [selectedInvestment, setSelectedInvestment] = useState<Investment | null>(null);
 
   const totalValue = investments.reduce((acc, i) => {
     const multiplier = i.type === 'stock' && i.exchange === 'JKT' ? 100 : 1;
@@ -30,19 +34,19 @@ export default function Investments() {
 
         {investments.length > 0 && (
           <div className="mb-6 rounded-2xl bg-card p-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Value</p>
+            <div className="flex justify-between items-center gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-muted-foreground truncate">Total Value</p>
                 <DynamicFontSizeText
                   text={formatCurrency(totalValue)}
                   initialFontSizeClass="text-xl"
                   className="font-bold"
                 />
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Total Gain/Loss</p>
+              <div className="text-right min-w-0 flex-1">
+                <p className="text-sm text-muted-foreground truncate">Total Gain/Loss</p>
                 <DynamicFontSizeText
-                  text={`${totalGain >= 0 ? '+' : '-'}${formatCurrency(totalGain)}`}
+                  text={`${totalGain >= 0 ? '+' : '-'}${formatCurrency(Math.abs(totalGain))}`}
                   initialFontSizeClass="text-xl"
                   className={cn(
                     "font-bold",
@@ -67,7 +71,11 @@ export default function Investments() {
               const gainPct = investment.purchasePrice > 0 ? (gain / investment.purchasePrice) * 100 : 0;
               const multiplier = investment.type === 'stock' && investment.exchange === 'JKT' ? 100 : 1;
               return (
-                <div key={investment.id} className="rounded-2xl bg-card p-4">
+                <div 
+                  key={investment.id} 
+                  className="rounded-2xl bg-card p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => setSelectedInvestment(investment)}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
@@ -88,26 +96,33 @@ export default function Investments() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="text-right">
-                        <p className="font-bold">{formatCurrency(investment.currentPrice * investment.quantity * multiplier)}</p>
-                        <p className={`text-xs ${gain >= 0 ? 'text-income' : 'text-expense'}`}>
-                          {gain >= 0 ? <TrendingUp className="h-3 w-3 inline" /> : <TrendingDown className="h-3 w-3 inline" />}
-                          {' '}{gain >= 0 ? '+' : ''}{gainPct.toFixed(1)}%
-                        </p>
-                      </div>
-                      <button onClick={() => deleteInvestment(investment.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                    <div className="text-right shrink-0">
+                      <DynamicFontSizeText
+                        text={formatCurrency(investment.currentPrice * investment.quantity * multiplier)}
+                        initialFontSizeClass="text-base"
+                        className="font-bold"
+                      />
+                      <p className={`text-xs ${gain >= 0 ? 'text-income' : 'text-expense'}`}>
+                        {gain >= 0 ? <TrendingUp className="h-3 w-3 inline" /> : <TrendingDown className="h-3 w-3 inline" />}
+                        {' '}{gain >= 0 ? '+' : ''}{gainPct.toFixed(1)}%
+                      </p>
                     </div>
                   </div>
-                  <div className="mt-3 flex justify-between text-xs text-muted-foreground">
-                    <span>{investment.quantity} {investment.symbol} @ {formatCurrency(investment.purchasePrice)}</span>
-                    <span>Now: {formatCurrency(investment.currentPrice)}</span>
+                  <div className="mt-3 flex justify-between text-xs text-muted-foreground overflow-hidden">
+                    <span className="truncate">{investment.quantity} {investment.symbol} @ {formatCurrency(investment.purchasePrice)}</span>
+                    <span className="ml-2 shrink-0">Now: {formatCurrency(investment.currentPrice)}</span>
                   </div>
                 </div>
               );
             })}
+            
+            {selectedInvestment && (
+              <InvestmentDetailDialog
+                investment={selectedInvestment}
+                open={!!selectedInvestment}
+                onOpenChange={(open) => !open && setSelectedInvestment(null)}
+              />
+            )}
           </div>
         )}
       </div>

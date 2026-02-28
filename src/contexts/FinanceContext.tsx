@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { startOfWeek, startOfMonth, startOfYear, endOfWeek, endOfMonth, endOfYear } from 'date-fns';
-import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal, Debt, Investment } from '@/types/finance';
+import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal, Debt, Investment, SaleRecord } from '@/types/finance';
 import {
   loadTransactions, saveTransactions,
   loadCategories, saveCategories,
@@ -45,9 +45,10 @@ interface FinanceContextType {
   addDebt: (d: Omit<Debt, 'id' | 'createdAt'>) => string;
   updateDebt: (id: string, d: Partial<Debt>) => void;
   deleteDebt: (id: string) => void;
-  addInvestment: (i: Omit<Investment, 'id' | 'currentPrice' | 'history'>) => void;
+  addInvestment: (i: Omit<Investment, 'id' | 'currentPrice' | 'history' | 'purchases'>) => void;
   updateInvestment: (id: string, i: Partial<Investment>) => void;
   deleteInvestment: (id: string) => void;
+  sellInvestment: (id: string, quantity: number, sellPrice: number) => void;
   importData: (data: ExportData, mode: 'replace' | 'merge') => void;
   getBalance: () => { income: number; expense: number; net: number };
   budgetsWithSpent: Budget[];
@@ -471,15 +472,69 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
     }
   }, [debts]);
 
-  const addInvestment = useCallback((i: Omit<Investment, 'id' | 'currentPrice' | 'history' | 'lastUpdated'>) => {
-    const newInvestment: Investment = {
-      ...i,
-      id: crypto.randomUUID(),
-      currentPrice: i.purchasePrice,
-      history: [{ date: new Date().toISOString(), price: i.purchasePrice }],
-    };
-    setInvestments(prev => [newInvestment, ...prev]);
-  }, []);
+  const addInvestment = useCallback((i: Omit<Investment, 'id' | 'currentPrice' | 'history' | 'lastUpdated' | 'purchases'>) => {
+    const existingInvestment = investments.find(inv => {
+      if (inv.type !== i.type) return false;
+      
+      if (i.type === 'crypto') {
+        const newCryptoId = i.cryptoId;
+        const existingCryptoId = inv.cryptoId;
+        if (newCryptoId && existingCryptoId) {
+          return newCryptoId.toLowerCase() === existingCryptoId.toLowerCase();
+        }
+      }
+      return inv.symbol.toLowerCase() === i.symbol.toLowerCase();
+    });
+
+    if (existingInvestment) {
+      const existingTotalCost = existingInvestment.purchasePrice * existingInvestment.quantity;
+      const newTotalCost = i.purchasePrice * i.quantity;
+      const totalQuantity = existingInvestment.quantity + i.quantity;
+      const averagePrice = (existingTotalCost + newTotalCost) / totalQuantity;
+
+      const newPurchaseRecord = {
+        date: i.purchaseDate,
+        quantity: i.quantity,
+        price: i.purchasePrice,
+        totalCost: newTotalCost,
+      };
+
+      // Update the existing investment
+      setInvestments(prev => prev.map(inv => {
+        if (inv.id === existingInvestment.id) {
+          return {
+            ...inv,
+            quantity: totalQuantity,
+            purchasePrice: averagePrice,
+            purchaseDate: i.purchaseDate, // Update to most recent purchase date
+            purchases: [...(inv.purchases || []), newPurchaseRecord],
+          };
+        }
+        return inv;
+      }));
+
+      toast.success(`Added ${i.quantity} ${i.symbol} to existing investment`, {
+        description: `New average price: ${averagePrice.toFixed(2)}`,
+      });
+    } else {
+      // Create new investment entry
+      const initialPurchaseRecord = {
+        date: i.purchaseDate,
+        quantity: i.quantity,
+        price: i.purchasePrice,
+        totalCost: i.purchasePrice * i.quantity,
+      };
+
+      const newInvestment: Investment = {
+        ...i,
+        id: crypto.randomUUID(),
+        currentPrice: i.purchasePrice,
+        history: [{ date: new Date().toISOString(), price: i.purchasePrice }],
+        purchases: [initialPurchaseRecord],
+      };
+      setInvestments(prev => [newInvestment, ...prev]);
+    }
+  }, [investments]);
 
   const updateInvestment = useCallback((id: string, updates: Partial<Investment>) => {
     setInvestments(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
@@ -494,6 +549,68 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       });
     }
   }, [investments]);
+
+  const sellInvestment = useCallback((id: string, quantity: number, sellPrice: number) => {
+    const investment = investments.find(i => i.id === id);
+    if (!investment) {
+      toast.error('Investment not found');
+      return;
+    }
+
+    if (quantity > investment.quantity) {
+      toast.error(`Cannot sell more than you own (${investment.quantity} ${investment.symbol})`);
+      return;
+    }
+
+    const multiplier = investment.type === 'stock' && investment.exchange === 'JKT' ? 100 : 1;
+    const totalRevenue = quantity * sellPrice * multiplier;
+    const profitLoss = (sellPrice - investment.purchasePrice) * quantity * multiplier;
+    
+    const transactionId = addTransaction({
+      amount: totalRevenue,
+      type: 'income',
+      category: 'investment',
+      paymentMethod: 'transfer',
+      description: `Sold ${quantity} ${investment.symbol} @ ${sellPrice}`,
+      date: new Date().toISOString(),
+    });
+
+    // Create sale record
+    const saleRecord: SaleRecord = {
+      date: new Date().toISOString(),
+      quantity,
+      price: sellPrice,
+      totalRevenue,
+      profitLoss,
+      transactionId,
+    };
+
+    const newQuantity = investment.quantity - quantity;
+    
+    if (newQuantity === 0) {
+      // Sold all - delete investment but keep sale record
+      setInvestments(prev => prev.filter(i => i.id !== id));
+      toast.success(`Sold all ${investment.symbol}`, {
+        description: `Profit/Loss: ${profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}`,
+      });
+    } else {
+      // Partial sale - update investment
+      setInvestments(prev => prev.map(inv => {
+        if (inv.id === id) {
+          return {
+            ...inv,
+            quantity: newQuantity,
+            sales: [...(inv.sales || []), saleRecord],
+          };
+        }
+        return inv;
+      }));
+      
+      toast.success(`Sold ${quantity} ${investment.symbol}`, {
+        description: `Profit/Loss: ${profitLoss >= 0 ? '+' : ''}${profitLoss.toFixed(2)}`,
+      });
+    }
+  }, [investments, addTransaction]);
 
   const importData = useCallback((data: ExportData, mode: 'replace' | 'merge') => {
     if (mode === 'replace') {
@@ -541,7 +658,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
         addSavingsGoal: () => {}, updateSavingsGoal: () => {}, deleteSavingsGoal: () => {},
         contributeSavingsGoal: () => {},
         addDebt: () => '', updateDebt: () => {}, deleteDebt: () => {},
-        addInvestment: () => {}, updateInvestment: () => {}, deleteInvestment: () => {},
+        addInvestment: () => {}, updateInvestment: () => {}, deleteInvestment: () => {}, sellInvestment: () => {},
         importData: () => {}, getBalance: () => ({ income: 0, expense: 0, net: 0 }),
       }}>
         {children}
@@ -560,7 +677,7 @@ export function FinanceProvider({ children }: { children: React.ReactNode }) {
       addRecurring, updateRecurring, deleteRecurring,
       addSavingsGoal, updateSavingsGoal, deleteSavingsGoal, contributeSavingsGoal,
       addDebt, updateDebt, deleteDebt,
-      addInvestment, updateInvestment, deleteInvestment,
+      addInvestment, updateInvestment, deleteInvestment, sellInvestment,
       importData,
       getBalance,
     }}>
