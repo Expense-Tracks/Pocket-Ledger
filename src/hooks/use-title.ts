@@ -9,7 +9,8 @@ const titles: Record<string, string> = {
   "/recurring": "Recurring",
   "/savings": "Savings Goals",
   "/debts": "Debts",
-  "/settings": "Settings",
+  "/investments": "Investments",
+  "/settings": "Settings"
 };
 
 export const useTitle = () => {
