@@ -11,18 +11,33 @@ interface LockScreenProps {
 
 export function LockScreen({ isLocked, onUnlock, isSupported, isLoading }: LockScreenProps) {
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [hasTriedOnce, setHasTriedOnce] = useState(false);
 
   useEffect(() => {
-    if (isLocked && !isLoading && isSupported) {
+    if (isAuthenticating && isLocked) {
       const timer = setTimeout(() => {
-        handleUnlock();
+        setIsAuthenticating(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticating, isLocked]);
+
+  useEffect(() => {
+    if (isLocked && !isLoading && isSupported && !isAuthenticating && !hasTriedOnce) {
+      setHasTriedOnce(true);
+      const timer = setTimeout(() => {
+        setIsAuthenticating(true);
+        onUnlock();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [isLocked, isLoading, isSupported]);
+  }, [isLocked, isLoading, isSupported, isAuthenticating, hasTriedOnce, onUnlock]);
 
   const handleUnlock = async () => {
+    if (isAuthenticating) return;
     setError(null);
+    setIsAuthenticating(true);
     onUnlock();
   };
 
