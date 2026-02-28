@@ -60,7 +60,7 @@ const DynamicFontSizeText: React.FC<DynamicFontSizeTextProps> = ({
   }, [text, adjustFontSize]);
 
   return (
-    <div ref={internalContainerRef} className={cn('w-full overflow-hidden whitespace-nowrap', className)}>
+    <div ref={internalContainerRef} className={cn('w-full min-w-0 overflow-hidden whitespace-nowrap', className)}>
       <span
         ref={textRef}
         className={cn(initialFontSizeClass)} // Apply initial size class

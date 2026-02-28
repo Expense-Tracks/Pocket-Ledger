@@ -27,10 +27,10 @@ export default function Dashboard() {
 
         {/* Stats */}
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <div className="stat-card rounded-2xl bg-income/10">
+          <div className="stat-card rounded-2xl bg-income/10 min-w-0">
             <div className="flex items-center gap-2 text-income">
-              <TrendingUp className="h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider">Income</span>
+              <TrendingUp className="h-4 w-4 shrink-0" />
+              <span className="text-xs font-semibold uppercase tracking-wider truncate">Income</span>
             </div>
             <DynamicFontSizeText
               text={formatCurrency(income)}
@@ -38,10 +38,10 @@ export default function Dashboard() {
               className="mt-1 font-bold text-income"
             />
           </div>
-          <div className="stat-card rounded-2xl bg-expense/10">
+          <div className="stat-card rounded-2xl bg-expense/10 min-w-0">
             <div className="flex items-center gap-2 text-expense">
-              <TrendingDown className="h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-wider">Expenses</span>
+              <TrendingDown className="h-4 w-4 shrink-0" />
+              <span className="text-xs font-semibold uppercase tracking-wider truncate">Expenses</span>
             </div>
             <DynamicFontSizeText
               text={formatCurrency(expense)}
@@ -83,9 +83,9 @@ function BudgetSummary() {
           const isOver = pct >= 100;
           return (
             <div key={b.id} className="rounded-xl bg-card p-3">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">{cat?.icon} {cat?.name || b.category}</span>
-                <span className="text-muted-foreground">{formatCurrency(b.spent)} / {formatCurrency(b.amount)}</span>
+              <div className="flex justify-between items-center gap-2 text-sm">
+                <span className="font-medium truncate">{cat?.icon} {cat?.name || b.category}</span>
+                <span className="text-muted-foreground shrink-0 truncate">{formatCurrency(b.spent)} / {formatCurrency(b.amount)}</span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
                 <div
@@ -116,9 +116,9 @@ function SavingsGoalsSummary() {
           const isComplete = pct >= 100;
           return (
             <div key={goal.id} className="rounded-xl bg-card p-3">
-              <div className="flex justify-between text-sm">
-                <span className="font-medium">{goal.icon} {goal.name}</span>
-                <span className="text-muted-foreground">{formatCurrency(goal.savedAmount)} / {formatCurrency(goal.targetAmount)}</span>
+              <div className="flex justify-between items-center gap-2 text-sm">
+                <span className="font-medium truncate">{goal.icon} {goal.name}</span>
+                <span className="text-muted-foreground shrink-0 truncate">{formatCurrency(goal.savedAmount)} / {formatCurrency(goal.targetAmount)}</span>
               </div>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-secondary">
                 <div

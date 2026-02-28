@@ -39,16 +39,16 @@ export default function Debts() {
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-card p-4">
-            <p className="text-sm text-muted-foreground">Owed to Me</p>
+          <div className="rounded-2xl bg-card p-4 min-w-0">
+            <p className="text-sm text-muted-foreground truncate">Owed to Me</p>
             <DynamicFontSizeText
               text={formatCurrency(totalOwedToMe)}
               initialFontSizeClass="text-xl"
               className="mt-1 font-bold text-income"
             />
           </div>
-          <div className="rounded-2xl bg-card p-4">
-            <p className="text-sm text-muted-foreground">I Owe</p>
+          <div className="rounded-2xl bg-card p-4 min-w-0">
+            <p className="text-sm text-muted-foreground truncate">I Owe</p>
             <DynamicFontSizeText
               text={formatCurrency(totalIOwe)}
               initialFontSizeClass="text-xl"
@@ -126,12 +126,13 @@ export default function Debts() {
                     </div >
                   </div >
                   <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <p className={`text-xl font-bold ${debt.type === 'owed-to-me' ? 'text-income' : 'text-expense'}`}>
-                        {formatCurrency(debt.amount)}
-                      </p>
+                    <div className="text-right shrink-0 min-w-0 flex-1">
+                      <DynamicFontSizeText
+                        text={formatCurrency(debt.amount)}
+                        className={`font-bold ${debt.type === 'owed-to-me' ? 'text-income' : 'text-expense'}`}
+                      />
                     </div >
-                    <button onClick={() => setEditDebt(debt)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                    <button onClick={() => setEditDebt(debt)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors shrink-0">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div >
