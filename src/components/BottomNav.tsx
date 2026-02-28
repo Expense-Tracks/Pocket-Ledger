@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, RefreshCw, MoreHorizontal, BarChart3, Target, PiggyBank, Settings, HandCoins } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, RefreshCw, MoreHorizontal, BarChart3, Target, PiggyBank, Settings, HandCoins, TrendingUp } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const primaryItems = [
   { to: '/', icon: LayoutDashboard, label: 'Home' },
   { to: '/transactions', icon: ArrowLeftRight, label: 'Transactions' },
+  { to: '/investments', icon: TrendingUp, label: 'Investments' },
   { to: '/budgets', icon: Target, label: 'Budgets' },
 ];
 

@@ -56,7 +56,7 @@ import { useBiometricAuth } from '@/hooks/use-biometric-auth';
 
 export default function Settings() {
   const { settings, updateSettings, formatCurrency, resetSettings } = useSettings();
-  const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, savingsGoals, debts, importData } = useFinance();
+  const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, savingsGoals, debts, importData, investments } = useFinance();
   const { isSupported: biometricSupported, isLoading: biometricLoading, registerBiometric, disableBiometric } = useBiometricAuth(settings.biometricEnabled);
 
   const [newCategory, setNewCategory] = useState<{ name: string; icon: string; type: 'income' | 'expense' }>({ name: '', icon: '📁', type: 'expense' });
@@ -111,6 +111,7 @@ export default function Settings() {
     recurringTransactions,
     savingsGoals,
     debts,
+    investments
   });
 
   const downloadFile = (content: string, filename: string, type: string) => {

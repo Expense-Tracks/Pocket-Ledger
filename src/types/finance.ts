@@ -73,6 +73,26 @@ export interface Debt {
   linkedTransactionId?: string; // Track the transaction created when marked as paid
 }
 
+export type InvestmentType = 'stock' | 'crypto' | 'gold' | 'other';
+
+export interface Investment {
+  id: string;
+  name: string;
+  symbol: string;
+  type: InvestmentType;
+  quantity: number;
+  purchasePrice: number;
+  currentPrice: number;
+  purchaseDate: string; // ISO string
+  history: PriceHistory[];
+  lastUpdated?: string; // ISO string - when currentPrice was last fetched
+}
+
+export interface PriceHistory {
+  date: string; // ISO string
+  price: number;
+}
+
 export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'groceries', name: 'Groceries', type: 'expense', icon: '🛒', isDefault: true },
   { id: 'transport', name: 'Transportation', type: 'expense', icon: '🚗', isDefault: true },

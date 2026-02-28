@@ -16,10 +16,14 @@ const Budgets = lazy(() => import("./pages/Budgets"));
 const Recurring = lazy(() => import("./pages/Recurring"));
 const SavingsGoals = lazy(() => import("./pages/SavingsGoals"));
 const Debts = lazy(() => import("./pages/Debts"));
+const Investments = lazy(() => import("./pages/Investments"));
 const Settings = lazy(() => import("./pages/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AddTransactionDialog = lazy(() =>
   import("./components/AddTransactionDialog").then(m => ({ default: m.AddTransactionDialog }))
+);
+const AddInvestmentDialog = lazy(() =>
+  import("./components/AddInvestmentDialog").then(m => ({ default: m.AddInvestmentDialog }))
 );
 
 // Defer toast systems — they're not needed at first paint
@@ -58,6 +62,7 @@ const AppRoutes = () => {
             <Route path="/recurring" element={<Recurring />} />
             <Route path="/savings" element={<SavingsGoals />} />
             <Route path="/debts" element={<Debts />} />
+            <Route path="/investments" element={<Investments />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -65,6 +70,7 @@ const AppRoutes = () => {
       </main>
       <Suspense fallback={null}>
         <AddTransactionDialog />
+        <AddInvestmentDialog />
       </Suspense>
       <BottomNav />
     </>
