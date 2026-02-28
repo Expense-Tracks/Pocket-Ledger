@@ -1,19 +1,17 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
-import { Plus, User, Calendar, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, User, Calendar, CheckCircle2, Clock, HandCoins, Trash2 } from 'lucide-react';
 import { useFinance } from '@/contexts/FinanceContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { Debt } from '@/types/finance';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AddDebtDialog } from '@/components/AddDebtDialog';
 import { EditDebtDialog } from '@/components/EditDebtDialog';
 
 export default function Debts() {
   const { debts } = useFinance();
-  const { settings, formatCurrency } = useSettings();
+  const { formatCurrency } = useSettings();
   const [addOpen, setAddOpen] = useState(false);
   const [editDebt, setEditDebt] = useState<Debt | null>(null);
 
@@ -25,126 +23,116 @@ export default function Debts() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="max-w-lg mx-auto p-4 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Debts</h1>
-          <Button onClick={() => setAddOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Debt
+      <div className="mx-auto max-w-lg px-4 pt-6">
+        <div className="mb-6 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Debts</h1>
+          <Button onClick={() => setAddOpen(true)} size="sm" variant="outline">
+            <Plus className="mr-1 h-4 w-4" /> Add Debt
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <Card className="p-4">
+        <div className="mb-6 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-card p-4">
             <p className="text-sm text-muted-foreground">Owed to Me</p>
             <p className="text-2xl font-bold text-income">
               {formatCurrency(totalOwedToMe)}
             </p>
-          </Card>
-          <Card className="p-4">
+          </div>
+          <div className="rounded-2xl bg-card p-4">
             <p className="text-sm text-muted-foreground">I Owe</p>
             <p className="text-2xl font-bold text-expense">
               {formatCurrency(totalIOwe)}
             </p>
-          </Card>
+          </div>
         </div>
 
-        <Tabs defaultValue="all" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="owed-to-me">Owed to Me</TabsTrigger>
-            <TabsTrigger value="i-owe">I Owe</TabsTrigger>
-          </TabsList>
+        <div className="mb-4 flex gap-2 rounded-xl bg-secondary p-1">
+          <button
+            type="button"
+            onClick={() => {}}
+            className="flex-1 rounded-lg py-2 text-sm font-semibold bg-card shadow-sm"
+          >
+            All ({debts.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => {}}
+            className="flex-1 rounded-lg py-2 text-sm font-semibold text-muted-foreground"
+          >
+            Owed to Me ({owedToMe.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => {}}
+            className="flex-1 rounded-lg py-2 text-sm font-semibold text-muted-foreground"
+          >
+            I Owe ({iOwe.length})
+          </button>
+        </div>
 
-          <TabsContent value="all" className="space-y-3 mt-4">
-            {debts.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No debts tracked yet</p>
-              </Card>
-            ) : (
-              debts.map(debt => <DebtCard key={debt.id} debt={debt} onEdit={setEditDebt} />)
-            )}
-          </TabsContent>
-
-          <TabsContent value="owed-to-me" className="space-y-3 mt-4">
-            {owedToMe.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No debts owed to you</p>
-              </Card>
-            ) : (
-              owedToMe.map(debt => <DebtCard key={debt.id} debt={debt} onEdit={setEditDebt} />)
-            )}
-          </TabsContent>
-
-          <TabsContent value="i-owe" className="space-y-3 mt-4">
-            {iOwe.length === 0 ? (
-              <Card className="p-8 text-center">
-                <p className="text-muted-foreground">No debts you owe</p>
-              </Card>
-            ) : (
-              iOwe.map(debt => <DebtCard key={debt.id} debt={debt} onEdit={setEditDebt} />)
-            )}
-          </TabsContent>
-        </Tabs>
+        {debts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <HandCoins className="mb-3 h-12 w-12 opacity-50" />
+            <p className="text-lg font-medium">No debts tracked yet</p>
+            <p className="text-sm">Track money you owe or are owed</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {debts.map(debt => (
+              <div key={debt.id} className="rounded-2xl bg-card p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                      <span className="font-semibold">{debt.person}</span>
+                      <Badge variant={debt.type === 'owed-to-me' ? 'default' : 'secondary'}>
+                        {debt.type === 'owed-to-me' ? 'Owed to Me' : 'I Owe'}
+                      </Badge>
+                    </div>
+                    {debt.description && (
+                      <p className="text-sm text-muted-foreground mb-2">{debt.description}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      {debt.dueDate && (
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          <span>{format(new Date(debt.dueDate), 'MMM d, yyyy')}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-1">
+                        {debt.status === 'paid' ? (
+                          <>
+                            <CheckCircle2 className="h-3 w-3 text-green-600" />
+                            <span className="text-green-600">Paid</span>
+                          </>
+                        ) : (
+                          <>
+                            <Clock className="h-3 w-3" />
+                            <span>Pending</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-right">
+                      <p className={`text-xl font-bold ${debt.type === 'owed-to-me' ? 'text-income' : 'text-expense'}`}>
+                        {formatCurrency(debt.amount)}
+                      </p>
+                    </div>
+                    <button onClick={() => setEditDebt(debt)} className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <AddDebtDialog open={addOpen} onOpenChange={setAddOpen} />
       {editDebt && <EditDebtDialog debt={editDebt} open={!!editDebt} onOpenChange={(open) => !open && setEditDebt(null)} />}
     </div>
-  );
-}
-
-function DebtCard({ debt, onEdit }: { debt: Debt; onEdit: (d: Debt) => void }) {
-  const { settings, formatCurrency } = useSettings();
-  const isOverdue = debt.dueDate && new Date(debt.dueDate) < new Date() && debt.status === 'pending';
-
-  return (
-    <Card
-      className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-      onClick={() => onEdit(debt)}
-    >
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">{debt.person}</span>
-            <Badge variant={debt.type === 'owed-to-me' ? 'default' : 'secondary'}>
-              {debt.type === 'owed-to-me' ? 'Owed to Me' : 'I Owe'}
-            </Badge>
-          </div>
-          {debt.description && (
-            <p className="text-sm text-muted-foreground mb-2">{debt.description}</p>
-          )}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            {debt.dueDate && (
-              <div className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                <span className={isOverdue ? 'text-destructive font-medium' : ''}>
-                  {format(new Date(debt.dueDate), 'MMM d, yyyy')}
-                </span>
-              </div>
-            )}
-            <div className="flex items-center gap-1">
-              {debt.status === 'paid' ? (
-                <>
-                  <CheckCircle2 className="h-3 w-3 text-green-600" />
-                  <span className="text-green-600">Paid</span>
-                </>
-              ) : (
-                <>
-                  <Clock className="h-3 w-3" />
-                  <span>Pending</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className={`text-xl font-bold ${debt.type === 'owed-to-me' ? 'text-income' : 'text-expense'}`}>
-            {formatCurrency(debt.amount)}
-          </p>
-        </div>
-      </div>
-    </Card>
   );
 }

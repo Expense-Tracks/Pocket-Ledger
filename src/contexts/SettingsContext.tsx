@@ -19,7 +19,6 @@ function loadSettings(): AppSettings {
       return { ...DEFAULT_SETTINGS, ...JSON.parse(stored) };
     }
   } catch (error) {
-    console.error('Failed to load settings:', error);
   }
   return DEFAULT_SETTINGS;
 }
@@ -28,7 +27,6 @@ function saveSettings(settings: AppSettings): void {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch (error) {
-    console.error('Failed to save settings:', error);
   }
 }
 

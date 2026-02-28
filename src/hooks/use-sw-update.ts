@@ -18,7 +18,6 @@ export function useSwUpdate() {
       }
     },
     onRegisterError(error) {
-      console.error('SW registration error:', error);
     },
   });
 

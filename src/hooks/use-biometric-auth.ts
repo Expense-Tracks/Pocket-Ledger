@@ -81,7 +81,6 @@ export function useBiometricAuth(enabled: boolean) {
       }
       return false;
     } catch (err) {
-      console.error('Biometric registration failed:', err);
       return false;
     }
   }, []);
