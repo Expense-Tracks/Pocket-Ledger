@@ -26,10 +26,6 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const AddTransactionDialog = lazy(() =>
   import("./components/AddTransactionDialog").then(m => ({ default: m.AddTransactionDialog }))
 );
-const AddInvestmentDialog = lazy(() =>
-  import("./components/AddInvestmentDialog").then(m => ({ default: m.AddInvestmentDialog }))
-);
-
 // Defer toast systems — they're not needed at first paint
 const ToastProviders = lazy(() =>
   import("./components/ToastProviders").then(m => ({ default: m.ToastProviders }))
@@ -77,7 +73,6 @@ const AppRoutes = () => {
       </main>
       <Suspense fallback={null}>
         <AddTransactionDialog />
-        <AddInvestmentDialog />
       </Suspense>
       <BottomNav />
     </>

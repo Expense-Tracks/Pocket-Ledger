@@ -38,11 +38,15 @@ export default function SplitBill() {
     setScanning(true);
     try {
       const result = await scanReceipt(file);
+      if (result.items.length === 0) {
+        toast.error('No items found in receipt. Try a clearer photo or enter manually.');
+        return;
+      }
       // Navigate to new bill page with scanned data
       navigate('/split-bill/new', { state: { scannedData: result } });
     } catch (error) {
-      toast.error('Failed to scan receipt. Please try again or enter manually.');
-      console.error(error);
+      const message = error instanceof Error ? error.message : 'Failed to scan receipt';
+      toast.error(message);
     } finally {
       setScanning(false);
       if (cameraInputRef.current) cameraInputRef.current.value = '';
