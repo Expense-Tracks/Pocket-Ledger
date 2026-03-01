@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ArrowLeftRight, RefreshCw, MoreHorizontal, BarChart3, Target, PiggyBank, Settings, HandCoins, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, ArrowLeftRight, RefreshCw, MoreHorizontal, BarChart3, Target, PiggyBank, Settings, HandCoins, TrendingUp, Receipt } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
 const primaryItems = [
@@ -15,6 +15,7 @@ const moreItems = [
   { to: '/recurring', icon: RefreshCw, label: 'Recurring' },
   { to: '/savings', icon: PiggyBank, label: 'Savings' },
   { to: '/debts', icon: HandCoins, label: 'Debts' },
+  { to: '/split-bill', icon: Receipt, label: 'Split Bill' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -23,7 +24,7 @@ export function BottomNav() {
   const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
 
-  const isMoreActive = moreItems.some(i => i.to === pathname);
+  const isMoreActive = moreItems.some(i => i.to === pathname || pathname.startsWith(i.to + '/'));
 
   return (
     <>
@@ -63,7 +64,7 @@ export function BottomNav() {
           </SheetHeader>
           <div className="grid grid-cols-3 gap-4 pt-4">
             {moreItems.map(({ to, icon: Icon, label }) => {
-              const active = pathname === to;
+              const active = pathname === to || pathname.startsWith(to + '/');
               return (
                 <button
                   key={to}

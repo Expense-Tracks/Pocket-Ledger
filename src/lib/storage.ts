@@ -1,7 +1,8 @@
 import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal, Debt, Investment, DEFAULT_CATEGORIES, DEFAULT_PAYMENT_METHODS } from '@/types/finance';
+import { SplitBill } from '@/types/splitbill';
 
 const DB_NAME = 'pocket-ledger';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
@@ -37,6 +38,9 @@ function openDB(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains('exchangeRates')) {
         // We'll store a single object for exchange rates, keyed by a constant like 'USD' as base
         db.createObjectStore('exchangeRates', { keyPath: 'baseCurrency' });
+      }
+      if (!db.objectStoreNames.contains('splitBills')) {
+        db.createObjectStore('splitBills', { keyPath: 'id' });
       }
     };
   });
@@ -193,5 +197,13 @@ export async function saveExchangeRates(cache: ExchangeRatesCache): Promise<void
       reject(tx.error);
     };
   });
+}
+
+export async function loadSplitBills(): Promise<SplitBill[]> {
+  return getAll('splitBills');
+}
+
+export async function saveSplitBills(bills: SplitBill[]): Promise<void> {
+  await putAll('splitBills', bills);
 }
 

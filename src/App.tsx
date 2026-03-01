@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { FinanceProvider } from "@/contexts/FinanceContext";
 import { SettingsProvider, useSettings } from "@/contexts/SettingsContext";
+import { SplitBillProvider } from "@/contexts/SplitBillContext";
 import { BottomNav } from "@/components/BottomNav";
 import { useSwUpdate } from "@/hooks/use-sw-update";
 import { useTitle } from "@/hooks/use-title";
@@ -18,6 +19,9 @@ const SavingsGoals = lazy(() => import("./pages/SavingsGoals"));
 const Debts = lazy(() => import("./pages/Debts"));
 const Investments = lazy(() => import("./pages/Investments"));
 const Settings = lazy(() => import("./pages/Settings"));
+const SplitBill = lazy(() => import("./pages/SplitBill"));
+const NewSplitBill = lazy(() => import("./pages/NewSplitBill"));
+const ViewSplitBill = lazy(() => import("./pages/ViewSplitBill"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AddTransactionDialog = lazy(() =>
   import("./components/AddTransactionDialog").then(m => ({ default: m.AddTransactionDialog }))
@@ -63,6 +67,9 @@ const AppRoutes = () => {
             <Route path="/savings" element={<SavingsGoals />} />
             <Route path="/debts" element={<Debts />} />
             <Route path="/investments" element={<Investments />} />
+            <Route path="/split-bill" element={<SplitBill />} />
+            <Route path="/split-bill/new" element={<NewSplitBill />} />
+            <Route path="/split-bill/:id" element={<ViewSplitBill />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -83,11 +90,13 @@ const App = () => {
   return (
     <SettingsProvider>
       <BiometricGuard>
-        <FinanceProvider>
-          <BrowserRouter future={{ v7_relativeSplatPath: true }}>
-            <AppRoutes />
-          </BrowserRouter>
-        </FinanceProvider>
+        <SplitBillProvider>
+          <FinanceProvider>
+            <BrowserRouter future={{ v7_relativeSplatPath: true }}>
+              <AppRoutes />
+            </BrowserRouter>
+          </FinanceProvider>
+        </SplitBillProvider>
       </BiometricGuard>
     </SettingsProvider>
   );

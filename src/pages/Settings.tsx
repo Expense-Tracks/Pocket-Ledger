@@ -53,10 +53,12 @@ import {
 import { toast } from 'sonner';
 import { ExportData } from '@/contexts/FinanceContext';
 import { useBiometricAuth } from '@/hooks/use-biometric-auth';
+import { useSplitBill } from '@/contexts/SplitBillContext';
 
 export default function Settings() {
   const { settings, updateSettings, formatCurrency, resetSettings } = useSettings();
   const { categories, paymentMethods, addCategory, deleteCategory, addPaymentMethod, deletePaymentMethod, transactions, budgets, recurringTransactions, savingsGoals, debts, importData, investments } = useFinance();
+  const { bills } = useSplitBill();
   const { isSupported: biometricSupported, isLoading: biometricLoading, registerBiometric, disableBiometric } = useBiometricAuth(settings.biometricEnabled);
 
   const [newCategory, setNewCategory] = useState<{ name: string; icon: string; type: 'income' | 'expense' }>({ name: '', icon: '📁', type: 'expense' });
@@ -111,7 +113,8 @@ export default function Settings() {
     recurringTransactions,
     savingsGoals,
     debts,
-    investments
+    investments,
+    bills
   });
 
   const downloadFile = (content: string, filename: string, type: string) => {
@@ -508,7 +511,7 @@ export default function Settings() {
                   <DialogHeader>
                     <DialogTitle>Import Data</DialogTitle>
                     <DialogDescription>
-                      {pendingImport && `Found ${pendingImport.transactions.length} transactions, ${pendingImport.categories.length} categories, ${pendingImport.budgets.length} budgets, ${pendingImport.recurringTransactions.length} recurring rules, ${(pendingImport.savingsGoals || []).length} savings goals, and ${(pendingImport.debts || []).length} debts.`}
+                      {pendingImport && `Found ${pendingImport.transactions.length} transactions, ${pendingImport.categories.length} categories, ${pendingImport.budgets.length} budgets, ${pendingImport.recurringTransactions.length} recurring rules, ${(pendingImport.savingsGoals || []).length} savings goals, ${(pendingImport.debts || []).length} debts, and ${(pendingImport.bills || []).length} split bills.`}
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-3 py-2">

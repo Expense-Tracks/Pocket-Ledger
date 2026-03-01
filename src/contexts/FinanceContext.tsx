@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { toast } from 'sonner';
 import { startOfWeek, startOfMonth, startOfYear, endOfWeek, endOfMonth, endOfYear } from 'date-fns';
 import { Transaction, Category, PaymentMethod, Budget, RecurringTransaction, SavingsGoal, Debt, Investment, SaleRecord } from '@/types/finance';
+import { SplitBill } from '@/types/splitbill';
 import {
   loadTransactions, saveTransactions,
   loadCategories, saveCategories,
@@ -77,6 +78,7 @@ export interface ExportData {
   savingsGoals: SavingsGoal[];
   debts: Debt[];
   investments: Investment[];
+  bills: SplitBill[];
 }
 
 const FinanceContext = createContext<FinanceContextType | null>(null);

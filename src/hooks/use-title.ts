@@ -10,6 +10,8 @@ const titles: Record<string, string> = {
   "/savings": "Savings Goals",
   "/debts": "Debts",
   "/investments": "Investments",
+  "/split-bill": "Split Bill",
+  "/split-bill/new": "New Split Bill",
   "/settings": "Settings"
 };
 
@@ -17,7 +19,17 @@ export const useTitle = () => {
   const location = useLocation();
 
   useEffect(() => {
-    const title = titles[location.pathname] || "Page Not Found";
+    // Handle dynamic routes like /split-bill/:id
+    let title = titles[location.pathname];
+    
+    if (!title && location.pathname.startsWith('/split-bill/')) {
+      title = "View Split Bill";
+    }
+    
+    if (!title) {
+      title = "Page Not Found";
+    }
+    
     document.title = `${title} | Pocket Ledger`;
     
     // Update meta description if needed (though more complex with vanilla JS)
