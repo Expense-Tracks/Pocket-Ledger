@@ -9,7 +9,7 @@ import { AmountInput } from '@/components/AmountInput';
 import { useSplitBill } from '@/contexts/SplitBillContext';
 import { useSettings } from '@/contexts/SettingsContext';
 import { ReceiptItem, Person } from '@/types/splitbill';
-import { Plus, Trash2, UserPlus, X } from 'lucide-react';
+import { Plus, Trash2, UserPlus, X, Pencil, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 const PERSON_COLORS = [
@@ -36,6 +36,10 @@ export default function NewSplitBill() {
   const [newItemPrice, setNewItemPrice] = useState('');
   const [newItemQty, setNewItemQty] = useState('1');
   const [newPersonName, setNewPersonName] = useState('');
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editQty, setEditQty] = useState('');
 
   useEffect(() => {
     if (scannedData) {
@@ -79,6 +83,38 @@ export default function NewSplitBill() {
 
   const removeItem = (id: string) => {
     setItems(prev => prev.filter(i => i.id !== id));
+    if (editingItemId === id) setEditingItemId(null);
+  };
+
+  const startEditItem = (item: ReceiptItem) => {
+    setEditingItemId(item.id);
+    setEditName(item.name);
+    setEditPrice(item.price.toString());
+    setEditQty(item.quantity.toString());
+  };
+
+  const saveEditItem = () => {
+    if (!editingItemId) return;
+    const price = parseFloat(editPrice);
+    const qty = parseInt(editQty) || 1;
+    if (!editName.trim()) {
+      toast.error('Item name cannot be empty');
+      return;
+    }
+    if (isNaN(price) || price <= 0) {
+      toast.error('Invalid price');
+      return;
+    }
+    setItems(prev => prev.map(item =>
+      item.id === editingItemId
+        ? { ...item, name: editName.trim(), price, quantity: qty }
+        : item
+    ));
+    setEditingItemId(null);
+  };
+
+  const cancelEditItem = () => {
+    setEditingItemId(null);
   };
 
   const addPerson = () => {
@@ -223,21 +259,77 @@ export default function NewSplitBill() {
           <div className="space-y-3">
             {items.map(item => (
               <div key={item.id} className="rounded-lg border p-3">
-                <div className="mb-2 flex items-start justify-between">
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatCurrency(item.price)} × {item.quantity} = {formatCurrency(item.price * item.quantity)}
-                    </p>
+                {editingItemId === item.id ? (
+                  /* Editing mode */
+                  <div className="mb-2">
+                    <div className="mb-2 grid grid-cols-[2fr_1fr_auto_auto_auto] items-center gap-2">
+                      <Input
+                        value={editName}
+                        onChange={e => setEditName(e.target.value)}
+                        placeholder="Item name"
+                        onKeyDown={e => e.key === 'Enter' && saveEditItem()}
+                      />
+                      <AmountInput
+                        value={editPrice}
+                        onChange={setEditPrice}
+                        placeholder="Price"
+                      />
+                      <Input
+                        type="number"
+                        value={editQty}
+                        onChange={e => setEditQty(e.target.value)}
+                        placeholder="Qty"
+                        className="w-16"
+                        min="1"
+                        onKeyDown={e => e.key === 'Enter' && saveEditItem()}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={saveEditItem}
+                        className="text-green-600"
+                      >
+                        <Check className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={cancelEditItem}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeItem(item.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+                ) : (
+                  /* Display mode */
+                  <div className="mb-2 flex items-start justify-between">
+                    <div
+                      className="flex-1 cursor-pointer rounded p-1 hover:bg-muted/50"
+                      onClick={() => startEditItem(item)}
+                    >
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {formatCurrency(item.price)} x {item.quantity} = {formatCurrency(item.price * item.quantity)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => startEditItem(item)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2">
                   {people.map(person => (
                     <Badge

@@ -44,24 +44,33 @@ function parseReceiptText(text: string): {
 
   // Enhanced regex patterns for better accuracy
   // Supports: $12.34, €10,50, 48,637 (IDR thousands), 250.129, 1234, 1,234.56
-  const pricePattern = /(?:[$€£¥₹Rp]\s*)?(\d{1,3}(?:[,\.]\d{3})*(?:[,\.]\d{1,2})?)(?:\s*[$€£¥₹])?(?:\s|$)/;
+  // Requires at least 2 digits to avoid matching stray single digits (e.g., "No Customer :3")
+  // Uses global flag so we can find the rightmost (last) price on each line
+  const pricePattern = /(?:[$€£¥₹Rp]\s*)?(\d{1,3}(?:[,\.]\d{3})*(?:[,\.]\d{1,2})?)(?:\s*[$€£¥₹])?(?:\s|$)/g;
   const percentPattern = /(\d+(?:\.\d+)?)\s*%/;
   const taxPattern = /\b(tax|vat|gst|hst|sales\s*tax|tax\s*amount|pajak|ppn)\b/i;
-  const tipPattern = /\b(tip|gratuity|service\s*charge|service\s*fee)\b/i;
+  const tipPattern = /\b(tip|gratuity|service\s*\.?\s*charge|serv\s*\.?\s*charge|service\s*fee)\b/i;
   const totalPattern = /\b(total|amount\s*due|balance|grand\s*total|net\s*total|final\s*total)\b/i;
   const subtotalPattern = /\b(subtotal|sub\s*total|sub-total|items\s*:\s*\d+)\b/i;
   // Supports: "2x Pizza", "Pizza x 2", "2 nasi goreng" (leading number without x)
   const itemQuantityPattern = /^(\d+)\s*[xX×]\s*(.+)|(.+?)\s+[xX×]\s*(\d+)|^(\d+)\s+(.+)/;
   
   // Keywords to skip (not items) - more precise to avoid false positives
-  const skipPatterns = /^(subtotal|sub\s*total|discount|change\b|cash\b|credit\s*card|debit\s*card|debit\s*mdr|payment|visa|mastercard|amex|total|balance|thank|receipt\s*(no|#)|date\b|time\b|server|table|order|before\s*rounding|rounding|items\s*:)/i;
+  const skipPatterns = /^(subtotal|sub\s*total|discount|change\b|cash\b|credit\s*card|debit\s*card|debit\s*mdr|payment|visa|mastercard|amex|total|balance|thank|receipt\s*(no|#)|date\b|time\b|server|table|order|before\s*rounding|rounding|items\s*:|no\s*customer|customer|chasier|cashier|kasir)/i;
+
+  // Lines that look like receipt headers/metadata (dates, reference numbers, staff names)
+  const headerPatterns = /^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}|^[a-z]?\s*\/\d+|^\w+\s+\d{4,}$/i;
 
   let foundSubtotal = false;
   let subtotalValue = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const priceMatch = line.match(pricePattern);
+    
+    // Find the LAST (rightmost) price on the line, since prices are typically right-aligned
+    // and leading numbers are often quantities
+    const priceMatches = [...line.matchAll(pricePattern)];
+    const priceMatch = priceMatches.length > 0 ? priceMatches[priceMatches.length - 1] : null;
     
     if (!priceMatch) continue;
 
@@ -88,7 +97,9 @@ function parseReceiptText(text: string): {
     }
     const price = parseFloat(priceStr);
     
-    if (isNaN(price) || price <= 0) continue;
+    // Skip invalid prices: must be a meaningful amount (at least 2 digits originally)
+    // This filters out stray single digits like "No Customer :3"
+    if (isNaN(price) || price <= 0 || priceMatch[1].replace(/[,\.]/g, '').length < 2) continue;
 
     const beforePrice = line.substring(0, line.indexOf(priceMatch[0])).trim();
 
@@ -123,6 +134,11 @@ function parseReceiptText(text: string): {
 
     // Skip non-item lines (rounding, before rounding, debit mdr, etc.)
     if (skipPatterns.test(line)) {
+      continue;
+    }
+
+    // Skip receipt header/metadata lines (dates, reference numbers, staff codes)
+    if (headerPatterns.test(line)) {
       continue;
     }
 
