@@ -1,5 +1,75 @@
 import { createWorker } from 'tesseract.js';
 
+/**
+ * Resize an image file to a maximum dimension to prevent memory issues
+ * in web workers (especially in PWA/mobile contexts where camera captures
+ * produce very large images that can crash Tesseract.js).
+ * Also converts to grayscale and increases contrast for better OCR accuracy.
+ */
+async function preprocessImage(file: File, maxDimension = 1500): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      let { width, height } = img;
+
+      // Scale down if either dimension exceeds the max
+      if (width > maxDimension || height > maxDimension) {
+        const scale = maxDimension / Math.max(width, height);
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        reject(new Error('Failed to get canvas context'));
+        return;
+      }
+
+      // Draw the resized image
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to grayscale and boost contrast for better OCR
+      const imageData = ctx.getImageData(0, 0, width, height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        // Grayscale using luminance formula
+        const gray = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+        // Boost contrast: stretch values away from midpoint
+        const contrasted = Math.min(255, Math.max(0, (gray - 128) * 1.5 + 128));
+        data[i] = contrasted;
+        data[i + 1] = contrasted;
+        data[i + 2] = contrasted;
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to convert canvas to blob'));
+          }
+        },
+        'image/png'
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for preprocessing'));
+    };
+
+    img.src = url;
+  });
+}
+
 export async function scanReceipt(imageFile: File): Promise<{
   items: Array<{ name: string; price: number; quantity: number }>;
   tax: number;
@@ -8,11 +78,16 @@ export async function scanReceipt(imageFile: File): Promise<{
   total: number;
 }> {
   try {
+    // Preprocess image: resize to prevent memory crashes in web workers
+    // (camera captures can be 10-20MB, causing Tesseract to fail in PWA context)
+    // Also applies grayscale + contrast boost for better OCR accuracy
+    const processedImage = await preprocessImage(imageFile);
+
     // Create Tesseract worker with English + Indonesian support
     const worker = await createWorker(['eng', 'ind']);
     
-    // Perform OCR
-    const { data: { text } } = await worker.recognize(imageFile);
+    // Perform OCR on the preprocessed (resized + enhanced) image
+    const { data: { text } } = await worker.recognize(processedImage);
     
     // Terminate worker to free memory
     await worker.terminate();
